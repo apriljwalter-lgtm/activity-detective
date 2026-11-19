@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <header class="hero">
@@ -98,7 +98,11 @@
 
   <section id="guide" class="card">
     <h2><span class="num">4</span> Site guide</h2>
-    <div id="guideBody" class="guide">Loading guide…</div>
+    <details id="guideDetails" class="guide-details">
+      <summary><span class="show">📖 Show the site guide</span><span class="hide">Hide the site guide</span></summary>
+      <p class="small-note">Purpose, data, model, test results, and limitations. The chatbot answers from this guide.</p>
+      <div id="guideBody" class="guide">Loading guide…</div>
+    </details>
   </section>
 </main>
 
@@ -135,7 +139,7 @@
 
 <script src="js/sound.js?v=8"></script>
 <script src="js/scene.js?v=7"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/app.js?v=9"></script>
 <script type="module" src="js/chat.js?v=7"></script>
 </body>
 </html>

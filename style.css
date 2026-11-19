@@ -117,6 +117,14 @@ figcaption{font-size:14px;margin-bottom:8px}
 .cm td.hot{background:rgba(255,62,165,.25);border-color:var(--pink);font-weight:700}
 
 /* guide */
+.guide-details summary{list-style:none;cursor:pointer;display:inline-block;font-family:var(--display);font-size:15px;color:#170733;background:var(--lime);
+  padding:9px 18px;border-radius:6px;transform:skewX(-8deg);box-shadow:4px 4px 0 var(--pink);margin:6px 0 4px}
+.guide-details summary::-webkit-details-marker{display:none}
+.guide-details summary:hover{filter:brightness(1.08)}
+.guide-details .hide{display:none}
+.guide-details[open] .show{display:none}
+.guide-details[open] .hide{display:inline}
+.guide-details[open] summary{background:transparent;color:var(--lime);border:2px solid var(--lime)}
 .guide{font-size:15px;color:#e8dcfa}
 .guide h1{font-size:20px;font-style:normal;transform:none;filter:none;background:none;color:var(--cyan);-webkit-background-clip:initial;background-clip:initial}
 .guide h2{font-size:16px;margin-top:20px;color:var(--pink)}

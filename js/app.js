@@ -214,6 +214,10 @@ async function loadGuide() {
   }
 }
 
+// the "Site guide" link at the top opens the collapsed guide
+document.querySelectorAll('a[href="#guide"]').forEach((a) => a.addEventListener("click", () => ($("guideDetails").open = true)));
+if (location.hash === "#guide") $("guideDetails").open = true;
+
 let rt;
 window.addEventListener("resize", () => {
   clearTimeout(rt);
