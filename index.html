@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <header class="hero">
@@ -34,15 +34,13 @@
     <div class="sec-head">
       <h2><span class="num">1</span> Guess the activity</h2>
       <div class="controls">
-        <button id="musicBtn" class="pill" aria-pressed="false">🎵 Music</button>
-        <button id="sfxBtn" class="pill" aria-pressed="false">🔊 Sounds</button>
         <button id="slowBtn" class="pill" aria-pressed="false">🐢 Slow-mo</button>
         <label class="toggle"><input type="checkbox" id="onlyMistakes"> Only the model's mistakes</label>
       </div>
     </div>
     <p class="hint">Each trace is 2.56 seconds of motion from a person the model <b>never saw during training</b>.
       The yellow playhead sweeps the trace while our workout buddy steps along. Every peak in the cyan up–down line is about one footstep.
-      Their feet are hidden in the fog until you guess! Turn on 🎵 and 🔊 for the full workout.</p>
+      Their feet are hidden in the fog until you guess! Turn on 🎵 Music and 🔊 Sounds (bottom-left corner) for the full workout.</p>
     <div class="trace-meta"><span id="cardCount"></span><span id="cardPerson"></span></div>
     <div class="viz-row">
       <div class="scene big" id="gameScene"></div>
@@ -121,15 +119,21 @@
   </aside>
 </div>
 
+<div class="boombox" role="group" aria-label="Sound controls">
+  <span class="bb-label">📻 SOUND</span>
+  <button id="musicBtn" class="pill" aria-pressed="false">🎵 Music</button>
+  <button id="sfxBtn" class="pill" aria-pressed="false">🔊 Sounds</button>
+</div>
+
 <footer class="wrap foot">
   <p>Data: synthetic accelerometer traces generated for this exhibit (simulation loosely modeled on the UCI HAR smartphone dataset design, Anguita et al., 2013; no UCI data used).
     Model: scikit-learn MLPClassifier. Chat: <a href="https://github.com/mlc-ai/web-llm">WebLLM</a>.
     Source &amp; training notebook: <a href="https://github.com/apriljwalter-lgtm/activity-detective">github.com/apriljwalter-lgtm/activity-detective</a>.</p>
 </footer>
 
-<script src="js/sound.js?v=5"></script>
-<script src="js/scene.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
-<script type="module" src="js/chat.js?v=5"></script>
+<script src="js/sound.js?v=6"></script>
+<script src="js/scene.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
+<script type="module" src="js/chat.js?v=6"></script>
 </body>
 </html>
