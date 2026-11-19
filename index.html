@@ -41,8 +41,8 @@
     <p class="hint">Each trace is 2.56 seconds of motion from a person the model <b>never saw during training</b>.
       The yellow playhead sweeps the trace while our workout buddy steps along. Every peak in the cyan up–down line is about one footstep.
       Their feet are hidden in the fog until you guess!</p>
-    <p class="sound-key">🔊 <b>Hear the steps</b> (turn on Sounds, bottom-left): before you guess, every footstep is the same tap, so you only hear the rhythm.
-      After you guess: <span class="c-cyan">same note = walking</span> · <span class="c-pink">notes climbing up = stairs up</span> · <span class="c-yellow">notes going down = stairs down</span>.</p>
+    <p class="sound-key">🔊 <b>Hear the steps</b> (turn on Sounds, bottom-left): the workout buddy stays silent until you guess. Then each footstep plays a note:
+      <span class="c-cyan">same note = walking</span> · <span class="c-pink">notes climbing up = stairs up</span> · <span class="c-yellow">notes going down = stairs down</span>.</p>
     <div class="trace-meta"><span id="cardCount"></span><span id="cardPerson"></span></div>
     <div class="viz-row">
       <div class="scene big" id="gameScene"></div>
@@ -133,9 +133,9 @@
     Source &amp; training notebook: <a href="https://github.com/apriljwalter-lgtm/activity-detective">github.com/apriljwalter-lgtm/activity-detective</a>.</p>
 </footer>
 
-<script src="js/sound.js?v=7"></script>
+<script src="js/sound.js?v=8"></script>
 <script src="js/scene.js?v=7"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/app.js?v=8"></script>
 <script type="module" src="js/chat.js?v=7"></script>
 </body>
 </html>
