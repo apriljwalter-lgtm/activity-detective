@@ -4,54 +4,82 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wearable Activity Detective</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <header class="hero">
   <div class="wrap">
-    <p class="kicker">Interactive health-data exhibit</p>
-    <h1>Wearable Activity Detective</h1>
-    <p class="lede">A phone in your pocket feels every step. Can a small neural network tell whether you're <b>walking</b>,
-      <b>climbing stairs</b>, or <b>going down stairs</b> from that motion alone? Make your own guess first, then see what the model says.</p>
+    <p class="kicker">★ Interactive health-data exhibit ★</p>
+    <h1><span>Wearable</span> Activity Detective</h1>
+    <p class="lede">Your phone feels every step. Can a small neural network tell if you're <b class="c-cyan">walking</b>,
+      <b class="c-pink">stepping up</b>, or <b class="c-yellow">stepping down</b> from the motion alone? Make your guess, then see what the model says. Feel the burn… of data science!</p>
+    <div class="hero-scenes">
+      <div class="scene" id="heroWalk"></div>
+      <div class="scene" id="heroUp"></div>
+      <div class="scene" id="heroDown"></div>
+    </div>
     <nav class="jump">
-      <a href="#game">Play</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a>
+      <a href="#game">▶ Play</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a><a href="#chat" class="chat-jump">Chatbot</a>
     </nav>
   </div>
+  <div class="hero-grid" aria-hidden="true"></div>
 </header>
 
 <div class="wrap layout">
 <main>
   <section id="game" class="card">
     <div class="sec-head">
-      <h2>1 · Guess the activity</h2>
-      <label class="toggle"><input type="checkbox" id="onlyMistakes"> Show only the model's mistakes</label>
+      <h2><span class="num">1</span> Guess the activity</h2>
+      <div class="controls">
+        <button id="slowBtn" class="pill" aria-pressed="false">🐢 Slow-mo</button>
+        <label class="toggle"><input type="checkbox" id="onlyMistakes"> Only the model's mistakes</label>
+      </div>
     </div>
     <p class="hint">Each trace is 2.56 seconds of motion from a person the model <b>never saw during training</b>.
-      Look at the bounce and its rhythm. Every peak in the up–down line (z) is roughly one step.</p>
+      The yellow playhead sweeps the trace while our workout buddy steps along. Every peak in the cyan up–down line is about one footstep.
+      Their feet are hidden in the fog until you guess!</p>
     <div class="trace-meta"><span id="cardCount"></span><span id="cardPerson"></span></div>
-    <div id="trace" class="trace" aria-label="accelerometer trace chart"></div>
-    <div class="legend"><span class="sw z"></span>up–down (z) <span class="sw x"></span>forward–back (x) <span class="sw y"></span>side–side (y)</div>
+    <div class="viz-row">
+      <div class="scene big" id="gameScene"></div>
+      <div>
+        <div id="trace" class="trace" aria-label="accelerometer trace chart"></div>
+        <div class="legend"><span class="sw z"></span>up–down (z) <span class="sw x"></span>forward–back (x) <span class="sw y"></span>side–side (y)</div>
+      </div>
+    </div>
 
     <div id="guessRow" class="guess-row" role="group" aria-label="Your guess"></div>
     <div id="reveal" class="reveal" hidden></div>
     <div class="game-foot">
-      <div class="score">You: <b id="youScore">0</b> / <span id="played">0</span> &nbsp;·&nbsp; Model: <b id="modelScore">0</b> / <span id="played2">0</span></div>
+      <div class="score">YOU <b id="youScore">0</b>/<span id="played">0</span> <span class="vs">VS</span> MODEL <b id="modelScore">0</b>/<span id="played2">0</span></div>
       <button id="nextBtn" class="btn ghost">Next trace →</button>
     </div>
   </section>
 
   <section id="spotlight" class="card">
-    <h2>2 · Mistake spotlight: the slow walker</h2>
+    <h2><span class="num">2</span> Mistake spotlight: the slow walker</h2>
     <p id="spotText" class="hint"></p>
     <div class="pair">
-      <figure><figcaption>The mistake: truly <b>walking</b>, predicted <b class="bad">stairs up</b></figcaption><div id="spotTrace" class="trace small"></div><p id="spotStats" class="stat"></p></figure>
-      <figure><figcaption>For comparison: a correctly predicted <b>walking</b> window from another person</figcaption><div id="compTrace" class="trace small"></div><p id="compStats" class="stat"></p></figure>
+      <figure>
+        <figcaption>The mistake: truly <b class="c-cyan">walking</b>, predicted <b class="c-pink">stairs up</b></figcaption>
+        <div id="spotTrace" class="trace small"></div>
+        <div class="scene-pair"><div class="scene" id="spotTruth"></div><div class="scene" id="spotModel"></div></div>
+        <p id="spotStats" class="stat"></p>
+      </figure>
+      <figure>
+        <figcaption>For comparison: a correctly predicted <b class="c-cyan">walking</b> window from another person</figcaption>
+        <div id="compTrace" class="trace small"></div>
+        <div class="scene" id="compScene"></div>
+        <p id="compStats" class="stat"></p>
+      </figure>
     </div>
   </section>
 
   <section id="results" class="card">
-    <h2>3 · How good is the model?</h2>
-    <p class="hint">Measured on 720 windows from 6 held-out people.</p>
+    <h2><span class="num">3</span> How good is the model?</h2>
+    <p class="hint">Scored on 720 windows from 6 held-out people.</p>
     <div class="results-grid">
       <div>
         <h3>Accuracy vs. a simple baseline</h3>
@@ -67,25 +95,25 @@
   </section>
 
   <section id="guide" class="card">
-    <h2>4 · Site guide</h2>
+    <h2><span class="num">4</span> Site guide</h2>
     <div id="guideBody" class="guide">Loading guide…</div>
   </section>
-
 </main>
+
   <aside id="chat" class="card chat-side">
     <h2>Ask the chatbot</h2>
-    <p class="hint">A small language model runs <b>entirely in your browser</b> (WebLLM + WebGPU) and answers only from the site guide.
-      It downloads about 0.9&nbsp;GB the first time, so it's off until you turn it on. The rest of the exhibit works without it.</p>
+    <p class="hint">Type any question about the data, model, or results. A small language model runs <b>entirely in your browser</b> (WebLLM + WebGPU)
+      and answers only from the site guide. It's about a 0.9&nbsp;GB download the first time.</p>
     <div id="chatStatus" class="chat-status"></div>
-    <button id="enableChat" class="btn">Enable chat</button>
+    <button id="enableChat" class="btn">⚡ Enable chat</button>
     <div id="progressWrap" class="progress" hidden><div id="progressBar"></div></div>
     <p id="progressText" class="small-note"></p>
-    <div id="chatUI" hidden>
+    <div id="chatUI">
       <div id="chatLog" class="chat-log" aria-live="polite"></div>
       <div class="suggest" id="suggest"></div>
       <form id="chatForm" class="chat-form">
-        <input id="chatInput" autocomplete="off" placeholder="Ask about the data, model, or results…">
-        <button class="btn" type="submit">Send</button>
+        <input id="chatInput" autocomplete="off" placeholder="Enable chat first, then type your question" aria-label="Type your question">
+        <button id="sendBtn" class="btn" type="submit">Send</button>
       </form>
     </div>
   </aside>
@@ -97,7 +125,8 @@
     Source &amp; training notebook: <a href="https://github.com/apriljwalter-lgtm/activity-detective">github.com/apriljwalter-lgtm/activity-detective</a>.</p>
 </footer>
 
-<script src="js/app.js?v=3"></script>
-<script type="module" src="js/chat.js?v=3"></script>
+<script src="js/scene.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
+<script type="module" src="js/chat.js?v=4"></script>
 </body>
 </html>

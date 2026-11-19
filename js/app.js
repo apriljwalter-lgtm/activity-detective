@@ -7,6 +7,7 @@ const $ = (id) => document.getElementById(id);
 const pct = (v) => (v * 100).toFixed(1) + "%";
 
 async function init() {
+  heroScenes();
   try {
     DATA = await (await fetch("data/exhibit.json")).json();
   } catch (e) {
@@ -20,6 +21,17 @@ async function init() {
   loadGuide();
   $("nextBtn").onclick = () => { pos = (pos + 1) % deck.length; renderCard(); };
   $("onlyMistakes").onchange = () => { buildDeck(); renderCard(); };
+  $("slowBtn").onclick = () => {
+    const on = $("slowBtn").getAttribute("aria-pressed") !== "true";
+    $("slowBtn").setAttribute("aria-pressed", on);
+    window.ANIM.speed = on ? 0.35 : 1;
+  };
+}
+
+function heroScenes() {
+  Scenes.createScene($("heroWalk"), { activity: "walking", f: 1.9, label: Scenes.CALLS.walking });
+  Scenes.createScene($("heroUp"), { activity: "upstairs", f: 1.6, label: Scenes.CALLS.upstairs });
+  Scenes.createScene($("heroDown"), { activity: "downstairs", f: 1.85, label: Scenes.CALLS.downstairs });
 }
 
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -28,6 +40,13 @@ function buildDeck() {
   const only = $("onlyMistakes").checked;
   deck = shuffle(DATA.gallery.filter((g) => !only || g.true !== g.pred));
   pos = 0;
+}
+
+// a scene that walks in time with a specific trace window (footfalls land on the bounce peaks)
+function windowScene(el, w, activity, label, mystery = false) {
+  const T = w.z.length / DATA.sample_rate_hz;
+  const t0 = Scenes.firstPeakTime(w.z, DATA.sample_rate_hz, w.steps_per_sec);
+  return Scenes.createScene(el, { activity, f: w.steps_per_sec, t0, loop: T, label, mystery });
 }
 
 // ---------- chart ----------
@@ -49,16 +68,18 @@ function drawTrace(el, w) {
   let grid = "";
   for (let s = 0; s <= Math.floor(secs); s++) {
     const x = P.l + (s / secs) * (W - P.l - P.r);
-    grid += `<line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" stroke="#eee9df"/><text x="${x}" y="${H - 8}" font-size="12" fill="#8a8f96" text-anchor="middle">${s}s</text>`;
+    grid += `<line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" stroke="rgba(255,62,165,.18)"/><text x="${x}" y="${H - 8}" font-size="12" fill="#a893cc" text-anchor="middle">${s}s</text>`;
   }
   for (const v of [-ym, 0, ym]) {
-    grid += `<line x1="${P.l}" x2="${W - P.r}" y1="${sy(v)}" y2="${sy(v)}" stroke="${v === 0 ? "#d6d1c6" : "#eee9df"}"/><text x="${P.l - 6}" y="${sy(v) + 4}" font-size="12" fill="#8a8f96" text-anchor="end">${v.toFixed(1)}g</text>`;
+    grid += `<line x1="${P.l}" x2="${W - P.r}" y1="${sy(v)}" y2="${sy(v)}" stroke="${v === 0 ? "rgba(255,255,255,.25)" : "rgba(255,62,165,.18)"}"/><text x="${P.l - 6}" y="${sy(v) + 4}" font-size="12" fill="#a893cc" text-anchor="end">${v.toFixed(1)}g</text>`;
   }
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="three-axis acceleration over ${secs} seconds">
     ${grid}
-    <path d="${path(w.y)}" fill="none" stroke="var(--y)" stroke-width="1.4" opacity=".8"/>
-    <path d="${path(w.x)}" fill="none" stroke="var(--x)" stroke-width="1.4" opacity=".85"/>
-    <path d="${path(w.z)}" fill="none" stroke="var(--z)" stroke-width="2.2"/></svg>`;
+    <path d="${path(w.y)}" fill="none" stroke="var(--y)" stroke-width="1.4" opacity=".75"/>
+    <path d="${path(w.x)}" fill="none" stroke="var(--x)" stroke-width="1.4" opacity=".8"/>
+    <path d="${path(w.z)}" fill="none" stroke="var(--z)" stroke-width="6" opacity=".18"/>
+    <path d="${path(w.z)}" fill="none" stroke="var(--z)" stroke-width="2.4"/></svg>`;
+  Scenes.registerPlayhead(el, { sx, sy, n, z: w.z, fs: DATA.sample_rate_hz, top: P.t, bottom: H - P.b });
 }
 
 // ---------- game ----------
@@ -68,12 +89,15 @@ function renderCard() {
   $("cardCount").textContent = `Trace ${pos + 1} of ${deck.length}`;
   $("cardPerson").textContent = `Held-out person #${w.person}`;
   drawTrace($("trace"), w);
+  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true);
   $("reveal").hidden = true;
+  $("reveal").innerHTML = "";
   const row = $("guessRow");
   row.innerHTML = "";
   for (const a of DATA.activities) {
     const b = document.createElement("button");
     b.className = "btn choice";
+    b.dataset.a = a;
     b.textContent = SHORT[a];
     b.onclick = () => guess(a, b);
     row.appendChild(b);
@@ -91,17 +115,29 @@ function guess(a, btn) {
   $("youScore").textContent = score.you; $("modelScore").textContent = score.model;
   $("played").textContent = $("played2").textContent = score.played;
 
+  // fog lifts: the main scene now shows what really happened
+  windowScene($("gameScene"), w, w.true, "REALLY: " + Scenes.CALLS[w.true]);
+
   const probs = DATA.activities.map((k) => `
     <div class="prob"><span>${SHORT[k]}</span><div class="track"><div class="fill ${k === w.pred && !modelRight ? "wrong" : ""}" style="width:${w.probs[k] * 100}%"></div></div><span>${Math.round(w.probs[k] * 100)}%</span></div>`).join("");
   let note = "";
-  if (!modelRight) note = `<p class="small-note">The model got this one wrong. ${w.id === DATA.spotlight.id ? "This is the window in the <a href='#spotlight'>mistake spotlight</a>." : "Mix-ups like this usually happen when someone's step rhythm (here " + w.steps_per_sec + " steps/s) sits between the typical paces of two activities."}</p>`;
+  if (!modelRight) note = `<p class="small-note">The model fumbled this one. ${w.id === DATA.spotlight.id ? "It's the window in the <a href='#spotlight'>mistake spotlight</a>." : "Mix-ups like this happen when someone's step rhythm (here " + w.steps_per_sec + " steps/s) sits between the typical paces of two activities."}</p>`;
   $("reveal").innerHTML = `
-    <div class="verdict">Truth: ${DATA.labels[w.true]}</div>
-    <p>You said <b class="${youRight ? "good" : "bad"}">${SHORT[a]}</b> ${youRight ? "✓" : "✗"} &nbsp;·&nbsp;
-       The model said <b class="${modelRight ? "good" : "bad"}">${SHORT[w.pred]}</b> ${modelRight ? "✓" : "✗"}</p>
-    <p class="small-note">Model confidence for each activity · measured step rhythm: ${w.steps_per_sec} steps per second</p>
-    ${probs}${note}`;
+    <div class="verdict">${youRight && modelRight ? "Totally awesome! You both nailed it" : youRight ? "You beat the machine!" : modelRight ? "The model wins this round" : "Gnarly! You both missed it"}</div>
+    <p>Truth: <b>${DATA.labels[w.true]}</b> &nbsp;·&nbsp; You said <b>${SHORT[a]}</b><span class="badge ${youRight ? "ok" : "no"}">${youRight ? "✓" : "✗"}</span>
+       &nbsp;·&nbsp; Model said <b>${SHORT[w.pred]}</b><span class="badge ${modelRight ? "ok" : "no"}">${modelRight ? "✓" : "✗"}</span></p>
+    <div class="reveal-grid">
+      <div>
+        <div class="scene" id="modelScene"></div>
+        <p class="small-note">What the model pictured, in time with the same trace</p>
+      </div>
+      <div>
+        <p class="small-note">Model confidence for each activity · measured step rhythm: ${w.steps_per_sec} steps per second</p>
+        ${probs}${note}
+      </div>
+    </div>`;
   $("reveal").hidden = false;
+  windowScene($("modelScene"), w, w.pred, "MODEL: " + Scenes.CALLS[w.pred]);
 }
 
 // ---------- spotlight ----------
@@ -113,6 +149,9 @@ function renderSpotlight() {
   $("spotText").textContent = DATA.spotlight.explanation;
   drawTrace($("spotTrace"), s);
   drawTrace($("compTrace"), comp);
+  windowScene($("spotTruth"), s, s.true, "REALLY: " + Scenes.CALLS[s.true]);
+  windowScene($("spotModel"), s, s.pred, "MODEL: " + Scenes.CALLS[s.pred]);
+  windowScene($("compScene"), comp, "walking", "REALLY: " + Scenes.CALLS.walking);
   $("spotStats").textContent = `Person #${s.person} · ${s.steps_per_sec} steps/s · model: ${Math.round(s.probs.upstairs * 100)}% stairs up`;
   $("compStats").textContent = `Person #${comp.person} · ${comp.steps_per_sec} steps/s · model: ${Math.round(comp.probs.walking * 100)}% walking`;
 }

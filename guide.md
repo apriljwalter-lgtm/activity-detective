@@ -33,6 +33,8 @@ Test window #1832 comes from simulated person 16, who was truly **walking**. The
 
 ## How to use the exhibit
 - **Guess the activity:** look at the motion trace, pick an activity, and then reveal the model's prediction and the true answer. The exhibit keeps score for you and for the model.
+- **Animated workout buddy:** a cartoon figure steps in time with each trace, and its footsteps land on the peaks of the up-and-down line while a yellow playhead sweeps across the trace. Before you guess, the figure's legs are hidden in fog so the stairs don't give the answer away. After you guess, one scene shows what really happened and another shows what the model pictured. The animation is an illustration made for the exhibit. It is not part of the data or the model.
+- **Slow-mo:** slows the animation and playhead down.
 - **Show only mistakes:** this filter lets you study the windows the model got wrong.
 - **Mistake spotlight:** compares the highlighted mistake with a correctly predicted walking window from another person.
 - All windows shown in the exhibit come from the held-out test people.

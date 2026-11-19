@@ -63,7 +63,7 @@ async function enableChat() {
   }
   const guide = window.SITE_GUIDE || (await (await fetch("guide.md")).text());
   const model = gpu.f16 ? MODEL_F16 : MODEL_F32;
-  setStatus("WebGPU detected ✓ Downloading and starting the model (" + model + "). The first load can take a few minutes; later loads use your browser's cache.");
+  setStatus("WebGPU detected ✓ Downloading and warming up the model (" + model + "). The first load can take a few minutes; later loads use your browser's cache.");
   $("progressWrap").hidden = false;
   try {
     const webllm = await import(WEBLLM_URL);
@@ -85,8 +85,19 @@ async function enableChat() {
   $("progressText").textContent = "";
   btn.hidden = true;
   setStatus("Chat ready ✓ Answers come only from the site guide.", "good");
-  $("chatUI").hidden = false;
-  addMsg("bot", "Hi! Ask me about the data, the model, its results, or the mistake spotlight.");
+  setReady(true);
+  addMsg("bot", "Hi! Type any question about the data, the model, its results, or the mistake spotlight.");
+  $("chatInput").focus();
+}
+
+function setReady(on) {
+  $("chatInput").disabled = !on;
+  $("sendBtn").disabled = !on;
+  $("chatInput").placeholder = on ? "Type your question and press Enter" : "Enable chat first, then type your question";
+  document.querySelectorAll("#suggest button").forEach((b) => (b.disabled = !on));
+}
+
+function buildSuggestions() {
   const sug = $("suggest");
   for (const q of SUGGESTIONS) {
     const b = document.createElement("button");
@@ -119,6 +130,8 @@ async function ask(q) {
   busy = false;
 }
 
+buildSuggestions();
+setReady(false);
 $("enableChat").addEventListener("click", enableChat);
 $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); ask($("chatInput").value); });
 if (!("gpu" in navigator)) setStatus("Heads up: this browser doesn't report WebGPU support, so chat probably won't load here. Everything else works.", "bad");
