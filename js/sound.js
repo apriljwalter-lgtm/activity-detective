@@ -79,14 +79,26 @@
   function stopMusic() { clearInterval(timer); timer = null; }
 
   // ---------- sound effects ----------
-  const STEP_NOTE = { walking: 72, upstairs: 76, downstairs: 67, mystery: 64 };
-  function footstep(activity, foot) {
-    if (!state.sfx || !ctx) return;
-    const t = ctx.currentTime;
-    const base = STEP_NOTE[activity] || 70;
-    tone(sfxBus, "square", hz(base + (foot ? 0 : -5)), t, 0.09, 0.12, { cutoff: 3000 });
-    noise(sfxBus, t, 0.03, 0.08, "highpass", 5000);
+  // Footsteps you can "hear the shape" of:
+  //   mystery (before guessing): the same plain tap every step, so only the rhythm is a clue
+  //   walking: the same note every step (flat ground)
+  //   stairs up: a rising scale, one note higher per step
+  //   stairs down: a falling scale, one note lower per step
+  const SCALE = [0, 2, 4, 5, 7, 9, 11, 12];
+  function woodblock(midi, t, vol) {
+    tone(sfxBus, "sine", hz(midi), t, 0.16, vol, { attack: 0.002 });
+    tone(sfxBus, "triangle", hz(midi + 12), t, 0.05, vol * 0.35, { attack: 0.002 });
+    tone(sfxBus, "sine", 110, t, 0.08, vol * 0.6, { glideTo: 60, attack: 0.002 }); // little thud
   }
+  function footstep(activity, n) {
+    if (!state.sfx || !ctx) return;
+    const t = ctx.currentTime, i = n % SCALE.length;
+    if (activity === "mystery") return woodblock(67, t, 0.5);
+    if (activity === "walking") return woodblock(72, t, 0.55);
+    if (activity === "upstairs") return woodblock(64 + SCALE[i], t, 0.55);
+    if (activity === "downstairs") return woodblock(76 - SCALE[i], t, 0.55);
+  }
+  function duck() { if (musicBus) musicBus.gain.setTargetAtTime(state.sfx ? 0.14 : 0.32, ctx.currentTime, 0.2); }
   function win() {
     if (!state.sfx || !ctx) return;
     const t = ctx.currentTime;
@@ -112,7 +124,7 @@
     } catch (e) {}
   }
 
-  function setSfx(on) { if (on && !ensure()) return false; state.sfx = on; if (on) click(); return true; }
+  function setSfx(on) { if (on && !ensure()) return false; state.sfx = on; duck(); if (on) click(); return true; }
   function setMusic(on) {
     if (on && !ensure()) return false;
     state.music = on;

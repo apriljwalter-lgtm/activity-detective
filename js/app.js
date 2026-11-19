@@ -52,7 +52,7 @@ function buildDeck() {
 function windowScene(el, w, activity, label, mystery = false, withSteps = false) {
   const T = w.z.length / DATA.sample_rate_hz;
   const t0 = Scenes.firstPeakTime(w.z, DATA.sample_rate_hz, w.steps_per_sec);
-  const onStep = withSteps ? (foot) => Sound.footstep(mystery ? "mystery" : activity, foot) : null;
+  const onStep = withSteps ? (n) => Sound.footstep(mystery ? "mystery" : activity, n) : null;
   return Scenes.createScene(el, { activity, f: w.steps_per_sec, t0, loop: T, label, mystery, onStep });
 }
 
