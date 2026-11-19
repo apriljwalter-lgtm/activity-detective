@@ -93,7 +93,6 @@
   function footstep(activity, n) {
     if (!state.sfx || !ctx) return;
     const t = ctx.currentTime, i = n % SCALE.length;
-    if (activity === "mystery") return woodblock(67, t, 0.5);
     if (activity === "walking") return woodblock(72, t, 0.55);
     if (activity === "upstairs") return woodblock(64 + SCALE[i], t, 0.55);
     if (activity === "downstairs") return woodblock(76 - SCALE[i], t, 0.55);

@@ -96,7 +96,7 @@ function renderCard() {
   $("cardCount").textContent = `Trace ${pos + 1} of ${deck.length}`;
   $("cardPerson").textContent = `Held-out person #${w.person}`;
   drawTrace($("trace"), w);
-  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true, true);
+  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true, false); // silent until you guess
   $("reveal").hidden = true;
   $("reveal").innerHTML = "";
   const row = $("guessRow");
