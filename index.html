@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wearable Activity Detective</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Interactive health-data exhibit</p>
+    <h1>Wearable Activity Detective</h1>
+    <p class="lede">A phone in your pocket feels every step. Can a small neural network tell whether you're <b>walking</b>,
+      <b>climbing stairs</b>, or <b>going down stairs</b> from that motion alone? Make your own guess first, then see what the model says.</p>
+    <nav class="jump">
+      <a href="#game">Play</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a><a href="#chat">Ask the chatbot</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="game" class="card">
+    <div class="sec-head">
+      <h2>1 · Guess the activity</h2>
+      <label class="toggle"><input type="checkbox" id="onlyMistakes"> Show only the model's mistakes</label>
+    </div>
+    <p class="hint">Each trace is 2.56 seconds of motion from a person the model <b>never saw during training</b>.
+      Look at the bounce and its rhythm. Every peak in the up–down line (z) is roughly one step.</p>
+    <div class="trace-meta"><span id="cardCount"></span><span id="cardPerson"></span></div>
+    <div id="trace" class="trace" aria-label="accelerometer trace chart"></div>
+    <div class="legend"><span class="sw z"></span>up–down (z) <span class="sw x"></span>forward–back (x) <span class="sw y"></span>side–side (y)</div>
+
+    <div id="guessRow" class="guess-row" role="group" aria-label="Your guess"></div>
+    <div id="reveal" class="reveal" hidden></div>
+    <div class="game-foot">
+      <div class="score">You: <b id="youScore">0</b> / <span id="played">0</span> &nbsp;·&nbsp; Model: <b id="modelScore">0</b> / <span id="played2">0</span></div>
+      <button id="nextBtn" class="btn ghost">Next trace →</button>
+    </div>
+  </section>
+
+  <section id="spotlight" class="card">
+    <h2>2 · Mistake spotlight: the slow walker</h2>
+    <p id="spotText" class="hint"></p>
+    <div class="pair">
+      <figure><figcaption>The mistake: truly <b>walking</b>, predicted <b class="bad">stairs up</b></figcaption><div id="spotTrace" class="trace small"></div><p id="spotStats" class="stat"></p></figure>
+      <figure><figcaption>For comparison: a correctly predicted <b>walking</b> window from another person</figcaption><div id="compTrace" class="trace small"></div><p id="compStats" class="stat"></p></figure>
+    </div>
+  </section>
+
+  <section id="results" class="card">
+    <h2>3 · How good is the model?</h2>
+    <p class="hint">Measured on 720 windows from 6 held-out people.</p>
+    <div class="results-grid">
+      <div>
+        <h3>Accuracy vs. a simple baseline</h3>
+        <div id="bars"></div>
+        <p class="small-note" id="baselineNote"></p>
+      </div>
+      <div>
+        <h3>Where the mistakes happen</h3>
+        <table id="cm" class="cm"></table>
+        <p class="small-note">Rows: what people were really doing. Columns: what the model predicted. Most mistakes are walking ⇄ stairs up.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="card">
+    <h2>4 · Site guide</h2>
+    <div id="guideBody" class="guide">Loading guide…</div>
+  </section>
+
+  <section id="chat" class="card">
+    <h2>5 · Ask the chatbot</h2>
+    <p class="hint">A small language model runs <b>entirely in your browser</b> (WebLLM + WebGPU) and answers only from the site guide above.
+      It downloads about 0.9&nbsp;GB the first time, so it's off until you turn it on. The rest of the exhibit works without it.</p>
+    <div id="chatStatus" class="chat-status"></div>
+    <button id="enableChat" class="btn">Enable chat</button>
+    <div id="progressWrap" class="progress" hidden><div id="progressBar"></div></div>
+    <p id="progressText" class="small-note"></p>
+    <div id="chatUI" hidden>
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+      <div class="suggest" id="suggest"></div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" autocomplete="off" placeholder="Ask about the data, model, or results…">
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Data: synthetic accelerometer traces generated for this exhibit (simulation loosely modeled on the UCI HAR smartphone dataset design, Anguita et al., 2013; no UCI data used).
+    Model: scikit-learn MLPClassifier. Chat: <a href="https://github.com/mlc-ai/web-llm">WebLLM</a>.
+    Source &amp; training notebook: <a href="https://github.com/apriljwalter-lgtm/activity-detective">github.com/apriljwalter-lgtm/activity-detective</a>.</p>
+</footer>
+
+<script src="js/app.js"></script>
+<script type="module" src="js/chat.js"></script>
+</body>
+</html>
