@@ -72,11 +72,12 @@ figcaption{font-size:14px;margin-bottom:6px}
 .chat-form{display:flex;gap:8px}
 .chat-form input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px;font:inherit}
 .foot{font-size:13px;color:var(--muted);padding-bottom:40px}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(280px,30vw,380px);gap:22px;align-items:start}
 .chat-side{position:sticky;top:16px;display:flex;flex-direction:column;max-height:calc(100vh - 32px);overflow:hidden}
 .chat-side .hint{font-size:14px}
 #chatUI:not([hidden]){display:flex;flex-direction:column;flex:1;min-height:0}
 .chat-side .chat-log{flex:1;min-height:220px;height:auto}
 .chat-side .suggest button{text-align:left}
-@media (max-width:1080px){.layout{grid-template-columns:1fr}.chat-side{position:static;max-height:none}.chat-side .chat-log{height:320px;flex:none}}
-@media (max-width:720px){.pair,.results-grid{grid-template-columns:1fr}.prob,.barrow{grid-template-columns:110px 1fr 48px}}
+@media (max-width:760px){.layout{grid-template-columns:1fr}.chat-side{position:static;max-height:none}.chat-side .chat-log{height:320px;flex:none}}
+@media (max-width:1100px){.pair,.results-grid{grid-template-columns:1fr}}
+@media (max-width:720px){.prob,.barrow{grid-template-columns:110px 1fr 48px}}
