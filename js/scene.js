@@ -56,6 +56,8 @@
     const f = o.f || 1.8;
     const c = Math.max(0, (t - (o.t0 || 0)) * f) + 1000; // steps taken (offset keeps indices positive)
     const k = Math.floor(c), p = c - k;
+    if (o.onStep && scene.lastK !== undefined && k !== scene.lastK) o.onStep(k % 2);
+    scene.lastK = k;
     const tw = TW;
     const footX = (n) => n * tw + tw / 2;
 

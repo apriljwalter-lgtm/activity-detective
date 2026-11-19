@@ -19,8 +19,14 @@ async function init() {
   renderSpotlight();
   renderResults();
   loadGuide();
-  $("nextBtn").onclick = () => { pos = (pos + 1) % deck.length; renderCard(); };
+  $("nextBtn").onclick = () => { Sound.click(); pos = (pos + 1) % deck.length; renderCard(); };
   $("onlyMistakes").onchange = () => { buildDeck(); renderCard(); };
+  const toggle = (id, fn) => ($(id).onclick = () => {
+    const on = $(id).getAttribute("aria-pressed") !== "true";
+    if (fn(on) !== false) $(id).setAttribute("aria-pressed", on);
+  });
+  toggle("musicBtn", (on) => Sound.setMusic(on));
+  toggle("sfxBtn", (on) => Sound.setSfx(on));
   $("slowBtn").onclick = () => {
     const on = $("slowBtn").getAttribute("aria-pressed") !== "true";
     $("slowBtn").setAttribute("aria-pressed", on);
@@ -43,10 +49,11 @@ function buildDeck() {
 }
 
 // a scene that walks in time with a specific trace window (footfalls land on the bounce peaks)
-function windowScene(el, w, activity, label, mystery = false) {
+function windowScene(el, w, activity, label, mystery = false, withSteps = false) {
   const T = w.z.length / DATA.sample_rate_hz;
   const t0 = Scenes.firstPeakTime(w.z, DATA.sample_rate_hz, w.steps_per_sec);
-  return Scenes.createScene(el, { activity, f: w.steps_per_sec, t0, loop: T, label, mystery });
+  const onStep = withSteps ? (foot) => Sound.footstep(mystery ? "mystery" : activity, foot) : null;
+  return Scenes.createScene(el, { activity, f: w.steps_per_sec, t0, loop: T, label, mystery, onStep });
 }
 
 // ---------- chart ----------
@@ -89,7 +96,7 @@ function renderCard() {
   $("cardCount").textContent = `Trace ${pos + 1} of ${deck.length}`;
   $("cardPerson").textContent = `Held-out person #${w.person}`;
   drawTrace($("trace"), w);
-  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true);
+  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true, true);
   $("reveal").hidden = true;
   $("reveal").innerHTML = "";
   const row = $("guessRow");
@@ -116,7 +123,9 @@ function guess(a, btn) {
   $("played").textContent = $("played2").textContent = score.played;
 
   // fog lifts: the main scene now shows what really happened
-  windowScene($("gameScene"), w, w.true, "REALLY: " + Scenes.CALLS[w.true]);
+  windowScene($("gameScene"), w, w.true, "REALLY: " + Scenes.CALLS[w.true], false, true);
+  if (youRight) Sound.win(); else Sound.lose();
+  setTimeout(() => Sound.coach(Scenes.CALLS[w.true].replace("!", "")), 450);
 
   const probs = DATA.activities.map((k) => `
     <div class="prob"><span>${SHORT[k]}</span><div class="track"><div class="fill ${k === w.pred && !modelRight ? "wrong" : ""}" style="width:${w.probs[k] * 100}%"></div></div><span>${Math.round(w.probs[k] * 100)}%</span></div>`).join("");
