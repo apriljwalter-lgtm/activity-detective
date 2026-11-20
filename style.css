@@ -109,7 +109,11 @@ figcaption{font-size:14px;margin-bottom:8px}
 @keyframes grow{from{width:0!important}}
 .barrow b{font-family:var(--display);font-weight:400;color:var(--yellow)}
 .small-note{font-size:13px;color:var(--muted)}
-.cm{border-collapse:separate;border-spacing:4px;font-size:14px;width:100%}
+.cm{border-collapse:separate;border-spacing:4px;font-size:14px;width:100%;table-layout:fixed}
+.cm tr > :first-child{width:28%}
+.cm td{height:48px;width:24%;font-size:16px}
+.cm tr:first-child th{height:48px;vertical-align:bottom;line-height:1.2}
+.cm th{line-height:1.2}
 .cm th,.cm td{padding:8px;text-align:center;border-radius:6px}
 .cm th{color:var(--muted);font-weight:500}
 .cm td{background:#0f0424;border:1px solid var(--line)}
