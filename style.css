@@ -140,6 +140,9 @@ figcaption{font-size:14px;margin-bottom:8px}
 .chat-side h2{color:var(--cyan)}
 .chat-side .hint{font-size:14px}
 .chat-side .btn{align-self:flex-start;margin-left:4px}
+.model-pick{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;font-size:13px;color:var(--muted)}
+.model-pick select{font:inherit;font-size:14px;padding:7px;border-radius:8px;border:2px solid var(--line);background:#0f0424;color:var(--ink)}
+.msg-time{font-size:11px;color:var(--muted);margin:-4px 0 8px 4px}
 .chat-status{font-size:14px;margin-bottom:10px}
 .progress{height:12px;background:#0f0424;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:14px}
 #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--yellow),var(--pink));transition:width .3s}

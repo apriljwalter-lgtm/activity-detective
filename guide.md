@@ -48,4 +48,4 @@ Test window #1832 comes from simulated person 16, who was truly **walking**. The
 - This is a classroom demonstration. It is not a medical or fall-detection device.
 
 ## About the chatbot
-The chatbot is a small language model that runs entirely in your browser with WebLLM (WebGPU). It answers only from this guide. If this guide doesn't contain the answer, it should say so.
+The chatbot is a small language model that runs entirely in your browser with WebLLM (WebGPU). Visitors can choose Llama 3.2 1B (smarter) or Qwen 2.5 0.5B (faster). It answers only from this guide: for each question, the site picks the one or two guide sections that best match the question's words and gives them to the model. If this guide doesn't contain the answer, it should say so.

@@ -38,9 +38,10 @@ python ../tools/make_notebook.py      # optional: rebuild the executed notebook
 Needs numpy, pandas, scipy, scikit-learn, and matplotlib. The results are reproducible (seed 42). In Google Colab, upload the `.ipynb` and run all cells. The notebook then writes `exhibit.json` next to itself.
 
 ## Chatbot notes
-- Uses `Llama-3.2-1B-Instruct` through WebLLM, about a 0.9 GB download the first time it loads. It needs WebGPU, which works in recent Chrome or Edge on desktop.
+- Runs through WebLLM. Visitors choose `Llama-3.2-1B-Instruct` (smarter, about 0.9 GB) or `Qwen2.5-0.5B-Instruct` (faster, about 0.4 GB). It needs WebGPU, which works in recent Chrome or Edge on desktop.
+- **Speed:** small in-browser models are slowest at reading the prompt. So for each question, `js/chat.js` sends only the one or two most relevant sections of `guide.md` (simple keyword matching) instead of the whole guide, and caps answers at 2–3 sentences.
 - The page checks for WebGPU, shows loading progress, and keeps the exhibit working if chat can't load.
-- The system prompt tells the model to answer only from `guide.md` and to say "The site guide doesn't cover that" otherwise.
+- The system prompt tells the model to answer only from the guide excerpt and to say "The site guide doesn't cover that" otherwise. If no section matches, it gets the Purpose and Limitations sections so it can say what the guide does and doesn't cover.
 
 ## Viewing locally
 Opening `index.html` directly from disk won't load the data, so start a small web server first:
