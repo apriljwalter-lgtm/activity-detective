@@ -30,7 +30,9 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 **Supported by the guide?** ☐ Yes ☐ Partly ☑ No. **Wrong.** 98.8% and 67.1% are the accuracies for two individual volunteers (24 and 9), not walking detection or the baseline. The real comparison is 85.9% vs. 35.8%. "More consistent across all volunteers" is not in the guide. The instruction to "always include numbers" made the small model grab nearby numbers and give them the wrong meaning.
 
 **Retest after revision 2:**
->
+> The model's performance was compared to the baseline by calculating the percentage of times it got it right. The model got it right 85.9% of the time, while the baseline got it right only 35.8% of the time.
+
+**Supported by the guide?** ☑ Yes ☐ Partly ☐ No. Both numbers are correct and correctly labeled (network 85.9%, baseline 35.8%), and it adds no unsupported claims. **Fixed.**
 
 ---
 
