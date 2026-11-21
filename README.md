@@ -6,16 +6,20 @@ An interactive health-data exhibit: a small neural network tries to tell **walki
 - **Training & evaluation notebook:** [`notebook/train_activity_model.ipynb`](notebook/train_activity_model.ipynb) (same code as the script [`notebook/train_activity_model.py`](notebook/train_activity_model.py))
 - **Site guide (chatbot context):** [`guide.md`](guide.md)
 
-## Results (6 held-out people, 720 windows)
+## Results (9 held-out volunteers, 1,387 windows)
 | Model | Test accuracy |
 |---|---|
-| Neural network (MLP, 1 hidden layer × 16) | **89.4%** |
-| Baseline (always guess one activity) | 33.3% |
+| Neural network (MLP, hidden layers 32 → 16) | **85.9%** |
+| Baseline (always guess "walking") | 35.8% |
 
-Most mistakes are walking ⇄ stairs up. The highlighted mistake is a naturally slow walker whose 1.56 steps/s pace matches typical stair climbing.
+Walking is recognized 98.4% of the time, but stairs up is often mistaken for walking (105 of 196 mistakes). The highlighted mistake is volunteer 9, who climbed stairs with quick, light steps that look like walking.
 
 ## Data
-Synthetic accelerometer traces generated in the notebook (30 simulated people, 3,600 windows of 2.56 s at 50 Hz). The design is loosely modeled on the UCI HAR smartphone dataset (Anguita et al., 2013), but no UCI data is used.
+[Human Activity Recognition Using Smartphones](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones), UCI Machine Learning Repository: D. Anguita, A. Ghio, L. Oneto, X. Parra and J. L. Reyes-Ortiz (2013), licensed **CC BY 4.0**. 30 volunteers wore a Samsung Galaxy S II on the waist. We use the raw body-acceleration windows (2.56 s at 50 Hz) for walking, walking upstairs and walking downstairs, and keep the dataset's own split by person (21 training volunteers, 9 test volunteers).
+
+The dataset itself is not stored in this repo. The notebook downloads it from UCI if the `UCI HAR Dataset` folder isn't found.
+
+*An earlier version of this project used synthetic (simulated) data. See the git history.*
 
 ## Project files
 ```
@@ -35,7 +39,7 @@ cd notebook
 python train_activity_model.py        # retrains and rewrites ../data/exhibit.json
 python ../tools/make_notebook.py      # optional: rebuild the executed notebook
 ```
-Needs numpy, pandas, scipy, scikit-learn, and matplotlib. The results are reproducible (seed 42). In Google Colab, upload the `.ipynb` and run all cells. The notebook then writes `exhibit.json` next to itself.
+Needs numpy, pandas, scipy, scikit-learn, and matplotlib. The results are reproducible (seed 42). In Google Colab, upload the `.ipynb` and run all cells. It downloads the dataset automatically, then writes `exhibit.json` next to itself.
 
 ## Chatbot notes
 - Runs through WebLLM. Visitors choose `Llama-3.2-1B-Instruct` (smarter, about 0.9 GB) or `Qwen2.5-0.5B-Instruct` (faster, about 0.4 GB). It needs WebGPU, which works in recent Chrome or Edge on desktop.

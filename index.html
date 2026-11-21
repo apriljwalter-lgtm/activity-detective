@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 <header class="hero">
@@ -38,7 +38,7 @@
         <label class="toggle"><input type="checkbox" id="onlyMistakes"> Only the model's mistakes</label>
       </div>
     </div>
-    <p class="hint">Each trace is 2.56 seconds of motion from a person the model <b>never saw during training</b>.
+    <p class="hint">Each trace is 2.56 seconds of real phone motion from a volunteer the model <b>never saw during training</b>.
       The yellow playhead sweeps the trace while our workout buddy steps along. Every peak in the cyan up–down line is about one footstep.
       Their feet are hidden in the fog until you guess!</p>
     <p class="sound-key">🔊 <b>Hear the steps</b> (turn on Sounds, bottom-left): the workout buddy stays silent until you guess. Then each footstep plays a note:
@@ -61,17 +61,17 @@
   </section>
 
   <section id="spotlight" class="card">
-    <h2><span class="num">2</span> Mistake spotlight: the slow walker</h2>
+    <h2><span class="num">2</span> Mistake spotlight: the light-footed stair climber</h2>
     <p id="spotText" class="hint"></p>
     <div class="pair">
       <figure>
-        <figcaption>The mistake: truly <b class="c-cyan">walking</b>, predicted <b class="c-pink">stairs up</b></figcaption>
+        <figcaption id="spotCap">The mistake</figcaption>
         <div id="spotTrace" class="trace small"></div>
         <div class="scene-pair"><div class="scene" id="spotTruth"></div><div class="scene" id="spotModel"></div></div>
         <p id="spotStats" class="stat"></p>
       </figure>
       <figure>
-        <figcaption>For comparison: a correctly predicted <b class="c-cyan">walking</b> window from another person</figcaption>
+        <figcaption id="compCap">For comparison</figcaption>
         <div id="compTrace" class="trace small"></div>
         <div class="scene" id="compScene"></div>
         <p id="compStats" class="stat"></p>
@@ -81,7 +81,7 @@
 
   <section id="results" class="card">
     <h2><span class="num">3</span> How good is the model?</h2>
-    <p class="hint">Scored on 720 windows from 6 held-out people.</p>
+    <p class="hint" id="resultsHint">Scored on test volunteers the model never saw.</p>
     <div class="results-grid">
       <div>
         <h3>Accuracy vs. a simple baseline</h3>
@@ -91,7 +91,7 @@
       <div>
         <h3>Where the mistakes happen</h3>
         <table id="cm" class="cm"></table>
-        <p class="small-note">Rows: what people were really doing. Columns: what the model predicted. Most mistakes are walking ⇄ stairs up.</p>
+        <p class="small-note">Rows: what people were really doing. Columns: what the model predicted. The biggest problem: climbing stairs mistaken for walking.</p>
       </div>
     </div>
   </section>
@@ -139,14 +139,15 @@
 </div>
 
 <footer class="wrap foot">
-  <p>Data: synthetic accelerometer traces generated for this exhibit (simulation loosely modeled on the UCI HAR smartphone dataset design, Anguita et al., 2013; no UCI data used).
+  <p>Data: <a href="https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones">Human Activity Recognition Using Smartphones</a>,
+    UCI Machine Learning Repository (Anguita, Ghio, Oneto, Parra &amp; Reyes-Ortiz, 2013), licensed CC BY 4.0. We use the walking, walking-upstairs and walking-downstairs body-acceleration windows.
     Model: scikit-learn MLPClassifier. Chat: <a href="https://github.com/mlc-ai/web-llm">WebLLM</a>.
     Source &amp; training notebook: <a href="https://github.com/apriljwalter-lgtm/activity-detective">github.com/apriljwalter-lgtm/activity-detective</a>.</p>
 </footer>
 
 <script src="js/sound.js?v=8"></script>
-<script src="js/scene.js?v=7"></script>
-<script src="js/app.js?v=9"></script>
-<script type="module" src="js/chat.js?v=10"></script>
+<script src="js/scene.js?v=11"></script>
+<script src="js/app.js?v=12"></script>
+<script type="module" src="js/chat.js?v=11"></script>
 </body>
 </html>

@@ -1,25 +1,26 @@
 # %% [markdown]
-# # Wearable Activity Detective — training & evaluation notebook
+# # Wearable Activity Detective — training & evaluation notebook (real data)
 #
-# **Question:** Can a small neural network tell *walking* from *climbing stairs up* and *going stairs down*
+# **Question:** Can a small neural network tell *walking* from *walking upstairs* and *walking downstairs*
 # using only a phone's accelerometer?
 #
-# **Data:** Synthetic accelerometer traces generated in this notebook (the assignment allows public *or* synthetic
-# data). Each example is a 2.56-second window sampled at 50 Hz (128 readings) on three axes, measured in g.
-# The simulation is loosely modeled on the window size and activities of the public UCI "Human Activity Recognition
-# Using Smartphones" dataset (Anguita et al., 2013), but **no real people's data is used**.
+# **Data:** UCI "Human Activity Recognition Using Smartphones" dataset (Anguita, Ghio, Oneto, Parra & Reyes-Ortiz, 2013),
+# https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones — licensed CC BY 4.0.
+# 30 volunteers (ages 19–48) wore a Samsung Galaxy S II on the waist. The recordings are already cut into
+# 2.56-second windows (128 readings at 50 Hz, with 50% overlap between neighboring windows). We keep only the three
+# moving activities and use the raw **body acceleration** signals (gravity already filtered out by the dataset authors).
 #
 # **Plan**
-# 1. Simulate 30 "people", each with their own walking speed (cadence), stride strength, and phone wobble.
-# 2. Turn every 2.56 s window into 16 simple numbers (features).
-# 3. Hold out 6 whole people as the **test set** — never used for training or tuning.
-# 4. Tune and train a small neural network (scikit-learn `MLPClassifier`) on the other 24 people.
-# 5. Compare it to a simple baseline (always guess the most frequent activity) on the test set.
+# 1. Load the raw windows for walking / upstairs / downstairs.
+# 2. Turn every window into 16 simple numbers (features).
+# 3. Use the dataset's own split **by person**: 21 volunteers for training, 9 different volunteers for testing.
+# 4. Tune and train a small neural network (scikit-learn `MLPClassifier`) using only the training volunteers.
+# 5. Compare it to a simple baseline (always guess the most common training activity) on the test volunteers.
 # 6. Pick one mistake and explain it.
 # 7. Export held-out predictions to `exhibit.json` for the website.
 
 # %%
-import json, os
+import io, json, os, urllib.request, zipfile
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -32,194 +33,130 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 SEED = 42
-rng = np.random.default_rng(SEED)
-
 FS = 50            # samples per second
 WIN = 128          # samples per window (2.56 s)
 ACTIVITIES = ["walking", "upstairs", "downstairs"]
+CODES = {1: "walking", 2: "upstairs", 3: "downstairs"}   # dataset's activity_labels.txt
 LABELS = {"walking": "Walking", "upstairs": "Climbing stairs (up)", "downstairs": "Going down stairs"}
-N_PEOPLE = 30
-WINDOWS_PER_ACTIVITY = 40
 
 # %% [markdown]
-# ## 1. Simulate accelerometer traces
-#
-# Every step makes the phone bounce up and down (vertical axis **z**), surge forward and back (**x**),
-# and sway side to side once per stride (**y**). The three activities differ in *how* they bounce:
-#
-# | Activity | Steps per second | Up–down bounce | What's special |
-# |---|---|---|---|
-# | Walking | normal (~1.85) | medium | smooth, regular |
-# | Stairs up | slower (~10% fewer) | medium | stronger forward push each step |
-# | Stairs down | about normal | a bit bigger | sharper "landing" jolts on every step |
-#
-# Each simulated person also has their own pace and strength, so a **slow walker can look a lot like someone
-# climbing stairs** — that overlap is what makes the problem realistic.
+# ## 1. Load the data
+# Put the folder `UCI HAR Dataset` next to this notebook (or in the repo root). In Google Colab, the cell below
+# downloads it automatically from UCI if it isn't found.
 
 # %%
-def make_person(pid):
-    return {
-        "person": pid,
-        "cadence": rng.normal(1.85, 0.16),      # steps per second
-        "strength": rng.normal(1.0, 0.17),      # how hard they move
-        "tilt": rng.normal(0, 0.25),            # how the phone sits in the pocket (radians)
-        "noise": abs(rng.normal(1.0, 0.3)),     # sensor jitter
-    }
+URL = "https://archive.ics.uci.edu/static/public/240/human+activity+recognition+using+smartphones.zip"
+CANDIDATES = ["UCI HAR Dataset", "../UCI HAR Dataset", os.environ.get("HAR_DIR", "")]
+DATA_DIR = next((c for c in CANDIDATES if c and os.path.isdir(c)), None)
+if DATA_DIR is None:
+    print("Downloading the dataset from UCI (about 60 MB)...")
+    outer = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(URL).read()))
+    zipfile.ZipFile(io.BytesIO(outer.read("UCI HAR Dataset.zip"))).extractall(".")
+    DATA_DIR = "UCI HAR Dataset"
+print("Using data in:", DATA_DIR)
 
-ACTIVITY_STYLE = {
-    #              cadence x, vertical, forward, side, harmonic2, impact
-    "walking":    dict(cad=1.00, vert=0.30, fwd=0.15, side=0.08, h2=0.30, impact=0.06),
-    "upstairs":   dict(cad=0.90, vert=0.31, fwd=0.18, side=0.09, h2=0.26, impact=0.05),
-    "downstairs": dict(cad=0.98, vert=0.34, fwd=0.13, side=0.09, h2=0.38, impact=0.13),
-}
+def load_split(split):
+    y = np.loadtxt(f"{DATA_DIR}/{split}/y_{split}.txt", dtype=int)
+    person = np.loadtxt(f"{DATA_DIR}/{split}/subject_{split}.txt", dtype=int)
+    sig = lambda ax: np.loadtxt(f"{DATA_DIR}/{split}/Inertial Signals/body_acc_{ax}_{split}.txt")
+    # The phone sat upright at the waist, so its x-axis points up-down (it carries gravity in total_acc_x).
+    # We relabel axes for the exhibit: up-down = phone x, side-to-side = phone y, forward-back = phone z.
+    xyz = np.stack([sig("z"), sig("y"), sig("x")], axis=1)   # order: forward, side, up-down
+    keep = np.isin(y, list(CODES))
+    return xyz[keep], np.array([CODES[c] for c in y[keep]]), person[keep]
 
-def simulate_window(person, activity):
-    s = ACTIVITY_STYLE[activity]
-    t = np.arange(WIN) / FS
-    f = person["cadence"] * s["cad"] * rng.normal(1, 0.08)       # step frequency for this window
-    amp = person["strength"] * rng.normal(1, 0.20)
-    ph = rng.uniform(0, 2 * np.pi)
-    # vertical bounce: main step rhythm + a sharper second harmonic
-    z = amp * (s["vert"] * np.sin(2*np.pi*f*t + ph) + s["vert"] * s["h2"] * np.sin(2*np.pi*2*f*t + 2*ph + 0.6))
-    # landing jolts: short spikes once per step
-    step_times = np.arange((ph / (2*np.pi)) / f % (1/f), t[-1], 1/f)
-    for st in step_times:
-        z += amp * s["impact"] * 3 * np.exp(-((t - st) ** 2) / (2 * 0.018 ** 2))
-    x = amp * s["fwd"] * np.sin(2*np.pi*f*t + ph - 1.2)            # forward surge
-    y = amp * s["side"] * np.sin(np.pi*f*t + ph / 2)                 # side sway (once per stride)
-    # the phone is tilted a little in the pocket, so axes mix
-    c, sn = np.cos(person["tilt"]), np.sin(person["tilt"])
-    x, z = c*x - sn*z, sn*x + c*z
-    noise = 0.035 * person["noise"]
-    xyz = np.stack([x, y, z]) + rng.normal(0, noise, (3, WIN))
-    return xyz, f
-
-people = [make_person(p) for p in range(1, N_PEOPLE + 1)]
-traces, rows = [], []
-for person in people:
-    for act in ACTIVITIES:
-        for _ in range(WINDOWS_PER_ACTIVITY):
-            xyz, f = simulate_window(person, act)
-            traces.append(xyz)
-            rows.append({"person": person["person"], "activity": act, "true_steps_per_sec": f,
-                         "person_cadence": person["cadence"]})
-traces = np.array(traces)
-meta = pd.DataFrame(rows)
-print(traces.shape, "windows x axes x samples")
-print(meta["activity"].value_counts())
+traces_tr, y_train, g_train = load_split("train")
+traces_te, y_test, g_test = load_split("test")
+print("Train windows:", len(y_train), "from", len(set(g_train)), "people")
+print("Test windows: ", len(y_test), "from", len(set(g_test)), "people")
+print(pd.crosstab(np.r_[["train"] * len(y_train), ["test"] * len(y_test)], np.r_[y_train, y_test]))
 
 # %%
 fig, axes = plt.subplots(1, 3, figsize=(13, 3), sharey=True)
 t = np.arange(WIN) / FS
 for ax, act in zip(axes, ACTIVITIES):
-    i = meta.index[meta.activity == act][0]
-    for k, name in enumerate("xyz"):
-        ax.plot(t, traces[i, k], label=name, lw=1)
+    i = np.where(y_train == act)[0][5]
+    for k, name in enumerate(["forward-back", "side-side", "up-down"]):
+        ax.plot(t, traces_tr[i, k], label=name, lw=1)
     ax.set_title(LABELS[act]); ax.set_xlabel("seconds")
-axes[0].set_ylabel("acceleration (g)"); axes[0].legend()
+axes[0].set_ylabel("body acceleration (g)"); axes[0].legend(fontsize=8)
 plt.tight_layout(); plt.show()
 
 # %% [markdown]
 # ## 2. Turn each window into features
 # Instead of feeding 384 raw numbers to the network, we summarize each window with 16 easy-to-explain numbers:
-# how much each axis moves (standard deviation and range), the overall shake (magnitude) and its peaks,
-# how "spiky" the vertical signal is (kurtosis), and the **step rhythm** found with a Fourier transform
-# (dominant frequency) plus how much energy sits at low vs. high frequencies.
+# how much each direction moves (standard deviation and range), the overall shake (magnitude) and its peaks,
+# how "spiky" and lopsided the up-down signal is (kurtosis, skew), the **step rhythm** found with a Fourier
+# transform (dominant frequency), how energy is spread across low / middle / high frequencies, and how often the
+# up-down signal crosses its average.
 
 # %%
-FEATURE_NAMES = []
 def features(xyz):
-    x, y, z = xyz
-    mag = np.sqrt(x**2 + y**2 + z**2)
-    feats = {}
-    for name, sig in zip("xyz", (x, y, z)):
-        feats[f"{name}_std"] = sig.std()
-        feats[f"{name}_range"] = sig.max() - sig.min()
-    feats["mag_mean"] = mag.mean()
-    feats["mag_std"] = mag.std()
-    feats["mag_max"] = mag.max()
-    feats["z_kurtosis"] = kurtosis(z)
-    feats["z_skew"] = skew(z)
-    spec = np.abs(np.fft.rfft(z - z.mean())) ** 2
-    freqs = np.fft.rfftfreq(WIN, 1 / FS)
+    fwd, side, up = xyz
+    mag = np.sqrt(fwd**2 + side**2 + up**2)
+    f = {}
+    for name, sig in (("fwd", fwd), ("side", side), ("up", up)):
+        f[f"{name}_std"] = sig.std()
+        f[f"{name}_range"] = sig.max() - sig.min()
+    f["mag_mean"], f["mag_std"], f["mag_max"] = mag.mean(), mag.std(), mag.max()
+    f["up_kurtosis"], f["up_skew"] = kurtosis(up), skew(up)
+    # zero-padding to 1024 points gives a finer reading of the step rhythm (otherwise it can only be a multiple of 0.39)
+    spec = np.abs(np.fft.rfft(up - up.mean(), n=1024)) ** 2
+    freqs = np.fft.rfftfreq(1024, 1 / FS)
     band = (freqs > 0.5) & (freqs < 3.5)
-    feats["step_freq"] = freqs[band][np.argmax(spec[band])]
-    total = spec.sum() + 1e-9
-    feats["energy_low"] = spec[(freqs >= 0.5) & (freqs < 2.5)].sum() / total
-    feats["energy_mid"] = spec[(freqs >= 2.5) & (freqs < 5)].sum() / total
-    feats["energy_high"] = spec[freqs >= 5].sum() / total
-    zc = np.sum(np.diff(np.sign(z - z.mean())) != 0)
-    feats["z_zero_cross"] = zc
-    return feats
+    f["step_freq"] = freqs[band][np.argmax(spec[band])]
+    total = spec.sum() + 1e-12
+    f["energy_low"] = spec[(freqs >= 0.5) & (freqs < 2.5)].sum() / total
+    f["energy_mid"] = spec[(freqs >= 2.5) & (freqs < 5)].sum() / total
+    f["energy_high"] = spec[freqs >= 5].sum() / total
+    f["up_zero_cross"] = np.sum(np.diff(np.sign(up - up.mean())) != 0)
+    return f
 
-feat_df = pd.DataFrame([features(w) for w in traces])
-FEATURE_NAMES = list(feat_df.columns)
-X = feat_df.values
-y = meta["activity"].values
-groups = meta["person"].values
+feat_tr = pd.DataFrame([features(w) for w in traces_tr])
+feat_te = pd.DataFrame([features(w) for w in traces_te])
+FEATURE_NAMES = list(feat_tr.columns)
+X_train, X_test = feat_tr.values, feat_te.values
 print(len(FEATURE_NAMES), "features:", FEATURE_NAMES)
+feat_tr.groupby(y_train)[["step_freq", "up_std", "mag_max", "up_kurtosis"]].median().round(3)
 
 # %% [markdown]
-# ## 3. Split by person: 24 people for training, 6 held-out people for testing
-# Splitting by **person** (not by window) matters: windows from the same person look alike, so testing on
-# people the model has already seen would overstate how well it works on someone new.
-
-# %%
-person_ids = np.array([p["person"] for p in people])
-test_people = rng.choice(person_ids, size=6, replace=False)
-test_mask = np.isin(groups, test_people)
-X_train, y_train, g_train = X[~test_mask], y[~test_mask], groups[~test_mask]
-X_test, y_test = X[test_mask], y[test_mask]
-print("Test people:", sorted(test_people.tolist()))
-print("Train windows:", len(y_train), "| Test windows:", len(y_test))
-
-# %% [markdown]
-# ## 4. Tune the network using only the training people
-# We try a few network sizes and regularization strengths with 4-fold cross-validation **grouped by person**.
-# The test set is not touched here.
+# ## 3. Tune the network using only the training volunteers
+# 4-fold cross-validation **grouped by person**, so a volunteer is never in both the training and validation part.
+# The 9 test volunteers are not touched here.
 
 # %%
 def make_model(hidden, alpha):
     return make_pipeline(StandardScaler(),
-                         MLPClassifier(hidden_layer_sizes=hidden, alpha=alpha, max_iter=2000,
-                                       early_stopping=False, random_state=SEED))
+                         MLPClassifier(hidden_layer_sizes=hidden, alpha=alpha, max_iter=2000, random_state=SEED))
 
 results = []
-gkf = GroupKFold(n_splits=4)
-for hidden in [(8,), (16,), (32, 16)]:
-    for alpha in [1e-4, 1e-2, 1e-1]:
+for hidden in [(8,), (16,), (32,), (32, 16)]:
+    for alpha in [1e-4, 1e-2, 1e-1, 1.0]:
         scores = []
-        for tr, va in gkf.split(X_train, y_train, g_train):
+        for tr, va in GroupKFold(n_splits=4).split(X_train, y_train, g_train):
             m = make_model(hidden, alpha).fit(X_train[tr], y_train[tr])
             scores.append(accuracy_score(y_train[va], m.predict(X_train[va])))
         results.append({"hidden_layers": str(hidden), "alpha": alpha, "cv_accuracy": np.mean(scores)})
 tuning = pd.DataFrame(results).sort_values("cv_accuracy", ascending=False)
-print(tuning.to_string(index=False))
+print(tuning.head(8).to_string(index=False))
 best = tuning.iloc[0]
-BEST_HIDDEN, BEST_ALPHA = eval(best["hidden_layers"]), best["alpha"]
+BEST_HIDDEN, BEST_ALPHA = eval(best["hidden_layers"]), float(best["alpha"])
 print("Chosen:", BEST_HIDDEN, BEST_ALPHA)
 
 # %% [markdown]
-# ## 5. Train the final model and compare it to a baseline on the test set
+# ## 4. Train the final model and compare it to a baseline on the test volunteers
 
 # %%
 model = make_model(BEST_HIDDEN, BEST_ALPHA).fit(X_train, y_train)
 baseline = DummyClassifier(strategy="most_frequent").fit(X_train, y_train)
-
-pred = model.predict(X_test)
-proba = model.predict_proba(X_test)
-classes = list(model.classes_)
+pred, proba, classes = model.predict(X_test), model.predict_proba(X_test), list(model.classes_)
 base_pred = baseline.predict(X_test)
-
-nn_acc = accuracy_score(y_test, pred)
-base_acc = accuracy_score(y_test, base_pred)
+nn_acc, base_acc = accuracy_score(y_test, pred), accuracy_score(y_test, base_pred)
 print(f"Neural network test accuracy: {nn_acc:.1%}")
 print(f"Baseline (always '{base_pred[0]}') test accuracy: {base_acc:.1%}")
 print(classification_report(y_test, pred, digits=3))
-
 cm = confusion_matrix(y_test, pred, labels=ACTIVITIES)
-cm_df = pd.DataFrame(cm, index=[f"true {a}" for a in ACTIVITIES], columns=[f"pred {a}" for a in ACTIVITIES])
-cm_df
+pd.DataFrame(cm, index=[f"true {a}" for a in ACTIVITIES], columns=[f"pred {a}" for a in ACTIVITIES])
 
 # %%
 fig, ax = plt.subplots(figsize=(4.5, 4))
@@ -228,94 +165,105 @@ ax.set_xticks(range(3), ACTIVITIES, rotation=30); ax.set_yticks(range(3), ACTIVI
 ax.set_xlabel("predicted"); ax.set_ylabel("true")
 for i in range(3):
     for j in range(3):
-        ax.text(j, i, cm[i, j], ha="center", va="center", color="white" if cm[i, j] > cm.max()/2 else "black")
-ax.set_title("Test set confusion matrix")
-plt.tight_layout(); plt.show()
+        ax.text(j, i, cm[i, j], ha="center", va="center", color="white" if cm[i, j] > cm.max() / 2 else "black")
+ax.set_title("Test set confusion matrix"); plt.tight_layout(); plt.show()
+
+# %%
+per_person = pd.DataFrame({"person": g_test, "correct": pred == y_test}).groupby("person")["correct"].mean()
+print("Accuracy for each test volunteer:\n", (per_person * 100).round(1).to_string())
 
 # %% [markdown]
-# ## 6. Look closely at one mistake
-# We pick the walking-vs-stairs-up mistake the network was **most confident** about (that pair is the hardest to tell apart) and compare it to what that activity
-# normally looks like.
+# ## 5. Look closely at one mistake
+# We look at the most common kind of mistake and pick the example the network was **most confident** about.
 
 # %%
-test_idx = np.where(test_mask)[0]
 conf = proba.max(axis=1)
-# focus on the hardest pair: walking vs. climbing stairs up
-wrong = np.where((pred != y_test) & np.isin(y_test, ["walking", "upstairs"]) & np.isin(pred, ["walking", "upstairs"]))[0]
-spot = wrong[np.argmax(conf[wrong])]
-gi = test_idx[spot]
-m = meta.iloc[gi]
-train_steps = feat_df[~test_mask].groupby(meta.activity[~test_mask])["step_freq"].median()
-print(f"Window #{gi}: person {m.person}, truly '{m.activity}', predicted '{pred[spot]}' "
-      f"with {conf[spot]:.0%} confidence")
-print(f"This window's measured step rhythm: {feat_df.loc[gi, 'step_freq']:.2f} steps/s "
-      f"(this person's usual pace: {m.person_cadence:.2f})")
-print("Typical measured step rhythm in training data:\n", train_steps.round(2))
+off = [(cm[i, j], ACTIVITIES[i], ACTIVITIES[j]) for i in range(3) for j in range(3) if i != j]
+_, TRUE_A, PRED_A = max(off)
+cand = np.where((y_test == TRUE_A) & (pred == PRED_A))[0]
+spot = cand[np.argmax(conf[cand])]
+typical = feat_tr.groupby(y_train).median()
+row = feat_te.iloc[spot]
+print(f"Most common mistake: true {TRUE_A} -> predicted {PRED_A} ({max(off)[0]} windows)")
+print(f"Spotlight: test window {spot}, volunteer {g_test[spot]}, {conf[spot]:.0%} confident")
+cols = ["step_freq", "up_std", "mag_max", "up_kurtosis", "energy_mid"]
+print(pd.concat([row[cols].rename("this window"), typical.loc[TRUE_A, cols].rename(f"typical {TRUE_A}"),
+                 typical.loc[PRED_A, cols].rename(f"typical {PRED_A}")], axis=1).round(3))
 
 # %%
+def closer(feat):
+    v, a, b = row[feat], typical.loc[TRUE_A, feat], typical.loc[PRED_A, feat]
+    return abs(v - b) < abs(v - a)
+
+clues = []
+if closer("step_freq"):
+    clues.append(f"a step rhythm of {row.step_freq:.2f} steps per second (typical {LABELS[PRED_A].lower()}: "
+                 f"{typical.loc[PRED_A, 'step_freq']:.2f}; typical {LABELS[TRUE_A].lower()}: {typical.loc[TRUE_A, 'step_freq']:.2f})")
+if closer("up_std"):
+    clues.append(f"an up-down bounce of {row.up_std:.3f} g (typical {LABELS[PRED_A].lower()}: "
+                 f"{typical.loc[PRED_A, 'up_std']:.3f} g; typical {LABELS[TRUE_A].lower()}: {typical.loc[TRUE_A, 'up_std']:.3f} g)")
+if closer("mag_max"):
+    clues.append(f"a strongest jolt of {row.mag_max:.2f} g (typical {LABELS[PRED_A].lower()}: "
+                 f"{typical.loc[PRED_A, 'mag_max']:.2f} g; typical {LABELS[TRUE_A].lower()}: {typical.loc[TRUE_A, 'mag_max']:.2f} g)")
+clue_text = ("This window had " + "; and ".join(clues) + ". Those numbers look more like the predicted activity "
+             "than the real one in the training data.") if clues else (
+             "None of the simple summary numbers stands out on its own; the mix of features happened to sit "
+             "on the predicted activity's side of the network's boundary.")
 SPOTLIGHT_EXPLANATION = (
-    f"This person was truly {LABELS[m.activity].lower()}, but the network said "
-    f"'{LABELS[pred[spot]].lower()}' with {conf[spot]:.0%} confidence. Their step rhythm in this window was "
-    f"{feat_df.step_freq.iloc[gi]:.2f} steps per second (this simulated person is a naturally slow walker), which is closer to the typical "
-    f"{LABELS[pred[spot]].lower()} pace ({train_steps[pred[spot]]:.2f}) than to the typical "
-    f"{LABELS[m.activity].lower()} pace ({train_steps[m.activity]:.2f}) in our training data. "
-    "Accelerometer bounce alone can't tell whether you're going up in height. Things that might have helped: "
-    "a barometer (air-pressure) reading that shows height change, longer windows so the model sees more steps, "
-    "or more training people with unusually slow or fast paces."
+    f"Volunteer {g_test[spot]} was truly {LABELS[TRUE_A].lower()}, but the network said "
+    f"'{LABELS[PRED_A].lower()}' with {conf[spot]:.0%} confidence. {clue_text} "
+    "An accelerometer can't feel height change directly, so walking and stairs can look alike. Things that might "
+    "have helped: a barometer (air-pressure) reading that shows going up or down, longer windows so the model sees "
+    "more steps, the gyroscope signals the dataset also includes, or more training volunteers with different walking styles."
 )
 print(SPOTLIGHT_EXPLANATION)
 
 # %% [markdown]
-# ## 7. Export held-out predictions for the website
-# The site shows a gallery of test-set windows (people the model never saw). We include a mix of correct
-# predictions and mistakes, plus the summary numbers the site guide and chatbot rely on.
+# ## 6. Export held-out predictions for the website
+# The site shows a gallery of test-set windows (volunteers the model never saw): a mix of correct predictions and
+# mistakes, plus the summary numbers the site guide and chatbot rely on.
 
 # %%
-gallery_ids = []
 rng_g = np.random.default_rng(7)
+gallery = []
 for act in ACTIVITIES:
-    right_ones = [i for i in range(len(y_test)) if y_test[i] == act and pred[i] == act]
-    wrong_ones = [i for i in range(len(y_test)) if y_test[i] == act and pred[i] != act and i != spot]
-    gallery_ids += list(rng_g.choice(right_ones, 4, replace=False))
-    gallery_ids += list(rng_g.choice(wrong_ones, min(1, len(wrong_ones)), replace=False))
-rest = [int(i) for i in gallery_ids]
+    right = np.where((y_test == act) & (pred == act))[0]
+    wrong = np.where((y_test == act) & (pred != act) & (np.arange(len(y_test)) != spot))[0]
+    gallery += list(rng_g.choice(right, 4, replace=False)) + list(rng_g.choice(wrong, min(1, len(wrong)), replace=False))
+rest = [int(i) for i in gallery]
 rng_g.shuffle(rest)
 gallery_ids = [int(spot)] + rest   # the spotlight mistake is listed first; the site shuffles the game order
 
 def pack(i):
-    g = test_idx[i]
     return {
-        "id": int(g),
-        "person": int(meta.person.iloc[g]),
-        "true": y_test[i],
-        "pred": pred[i],
+        "id": int(i), "person": int(g_test[i]), "true": y_test[i], "pred": pred[i],
         "probs": {c: round(float(p), 3) for c, p in zip(classes, proba[i])},
-        "steps_per_sec": round(float(feat_df.step_freq.iloc[g]), 2),
-        "x": np.round(traces[g, 0], 3).tolist(),
-        "y": np.round(traces[g, 1], 3).tolist(),
-        "z": np.round(traces[g, 2], 3).tolist(),
+        "steps_per_sec": round(float(feat_te.step_freq.iloc[i]), 2),
+        "x": np.round(traces_te[i, 0], 3).tolist(),   # forward-back
+        "y": np.round(traces_te[i, 1], 3).tolist(),   # side-side
+        "z": np.round(traces_te[i, 2], 3).tolist(),   # up-down
     }
 
-per_class_recall = {a: round(float(cm[k, k] / cm[k].sum()), 3) for k, a in enumerate(ACTIVITIES)}
+typical_steps = {a: round(float(typical.loc[a, "step_freq"]), 2) for a in ACTIVITIES}
 exhibit = {
-    "activities": ACTIVITIES,
-    "labels": LABELS,
-    "sample_rate_hz": FS,
-    "window_seconds": WIN / FS,
+    "activities": ACTIVITIES, "labels": LABELS, "sample_rate_hz": FS, "window_seconds": WIN / FS,
+    "data_source": "UCI Human Activity Recognition Using Smartphones (Anguita et al., 2013), CC BY 4.0",
     "summary": {
-        "n_people": N_PEOPLE, "n_train_windows": int(len(y_train)), "n_test_windows": int(len(y_test)),
-        "n_test_people": 6, "nn_accuracy": round(float(nn_acc), 3), "baseline_accuracy": round(float(base_acc), 3),
+        "n_train_people": int(len(set(g_train))), "n_test_people": int(len(set(g_test))),
+        "n_train_windows": int(len(y_train)), "n_test_windows": int(len(y_test)),
+        "nn_accuracy": round(float(nn_acc), 3), "baseline_accuracy": round(float(base_acc), 3),
         "baseline_rule": f"always guess '{base_pred[0]}'",
-        "per_class_recall": per_class_recall,
-        "confusion_matrix": cm.tolist(),
-        "hidden_layers": list(BEST_HIDDEN), "alpha": float(BEST_ALPHA),
-        "n_features": len(FEATURE_NAMES), "features": FEATURE_NAMES,
+        "per_class_recall": {a: round(float(cm[k, k] / cm[k].sum()), 3) for k, a in enumerate(ACTIVITIES)},
+        "confusion_matrix": cm.tolist(), "hidden_layers": list(BEST_HIDDEN), "alpha": BEST_ALPHA,
+        "n_features": len(FEATURE_NAMES), "features": FEATURE_NAMES, "typical_steps_per_sec": typical_steps,
+        "test_counts": {a: int((y_test == a).sum()) for a in ACTIVITIES},
+        "per_person_accuracy": {int(k): round(float(v), 3) for k, v in per_person.items()},
     },
-    "spotlight": {"id": int(test_idx[spot]), "explanation": SPOTLIGHT_EXPLANATION},
+    "spotlight": {"id": int(spot), "true": TRUE_A, "pred": PRED_A, "explanation": SPOTLIGHT_EXPLANATION},
     "gallery": [pack(i) for i in gallery_ids],
 }
 OUT_DIR = "../data" if os.path.isdir("../data") else "."
 with open(os.path.join(OUT_DIR, "exhibit.json"), "w") as fh:
     json.dump(exhibit, fh)
 print("Wrote", os.path.join(OUT_DIR, "exhibit.json"), "with", len(exhibit["gallery"]), "gallery windows")
-print(json.dumps(exhibit["summary"], indent=1)[:800])
+print(json.dumps({k: v for k, v in exhibit["summary"].items() if k != "features"}, indent=1))

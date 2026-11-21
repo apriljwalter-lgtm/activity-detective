@@ -60,9 +60,10 @@ function windowScene(el, w, activity, label, mystery = false, withSteps = false)
 let YMAX = null;
 function yMax() {
   if (YMAX) return YMAX;
-  let m = 0;
-  for (const g of DATA.gallery) for (const k of ["x", "y", "z"]) for (const v of g[k]) m = Math.max(m, Math.abs(v));
-  return (YMAX = Math.ceil(m * 10) / 10);
+  const all = [];
+  for (const g of DATA.gallery) for (const k of ["x", "y", "z"]) for (const v of g[k]) all.push(Math.abs(v));
+  all.sort((a, b) => a - b);
+  return (YMAX = Math.ceil(all[all.length - 1] * 10) / 10);   // fit the biggest peak so nothing is cut off
 }
 
 function drawTrace(el, w) {
@@ -70,7 +71,7 @@ function drawTrace(el, w) {
   const W = el.clientWidth || 900, H = el.clientHeight || 230, P = { l: 44, r: 10, t: 10, b: 26 };
   const n = w.z.length, ym = yMax(), secs = n / DATA.sample_rate_hz;
   const sx = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r);
-  const sy = (v) => P.t + (1 - (v + ym) / (2 * ym)) * (H - P.t - P.b);
+  const sy = (v) => P.t + (1 - (Math.max(-ym, Math.min(ym, v)) + ym) / (2 * ym)) * (H - P.t - P.b);
   const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + sx(i).toFixed(1) + " " + sy(v).toFixed(1)).join("");
   let grid = "";
   for (let s = 0; s <= Math.floor(secs); s++) {
@@ -94,7 +95,7 @@ function renderCard() {
   const w = deck[pos];
   guessed = false;
   $("cardCount").textContent = `Trace ${pos + 1} of ${deck.length}`;
-  $("cardPerson").textContent = `Held-out person #${w.person}`;
+  $("cardPerson").textContent = `Test volunteer #${w.person}`;
   drawTrace($("trace"), w);
   windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true, false); // silent until you guess
   $("reveal").hidden = true;
@@ -130,7 +131,7 @@ function guess(a, btn) {
   const probs = DATA.activities.map((k) => `
     <div class="prob"><span>${SHORT[k]}</span><div class="track"><div class="fill ${k === w.pred && !modelRight ? "wrong" : ""}" style="width:${w.probs[k] * 100}%"></div></div><span>${Math.round(w.probs[k] * 100)}%</span></div>`).join("");
   let note = "";
-  if (!modelRight) note = `<p class="small-note">The model fumbled this one. ${w.id === DATA.spotlight.id ? "It's the window in the <a href='#spotlight'>mistake spotlight</a>." : "Mix-ups like this happen when someone's step rhythm (here " + w.steps_per_sec + " steps/s) sits between the typical paces of two activities."}</p>`;
+  if (!modelRight) note = `<p class="small-note">The model fumbled this one. ${w.id === DATA.spotlight.id ? "It's the window in the <a href='#spotlight'>mistake spotlight</a>." : "A phone's accelerometer can't feel height change, so a gentle stair climb or descent can shake the phone a lot like flat walking."}</p>`;
   $("reveal").innerHTML = `
     <div class="verdict">${youRight && modelRight ? "Totally awesome! You both nailed it" : youRight ? "You beat the machine!" : modelRight ? "The model wins this round" : "Gnarly! You both missed it"}</div>
     <p>Truth: <b>${DATA.labels[w.true]}</b> &nbsp;·&nbsp; You said <b>${SHORT[a]}</b><span class="badge ${youRight ? "ok" : "no"}">${youRight ? "✓" : "✗"}</span>
@@ -152,17 +153,21 @@ function guess(a, btn) {
 // ---------- spotlight ----------
 function renderSpotlight() {
   const s = DATA.gallery.find((g) => g.id === DATA.spotlight.id);
+  // comparison: a correctly predicted window of the same true activity, from a different volunteer
   const comp = DATA.gallery
-    .filter((g) => g.true === "walking" && g.pred === "walking" && g.person !== s.person)
-    .sort((a, b) => b.probs.walking - a.probs.walking)[0];
+    .filter((g) => g.true === s.true && g.pred === s.true && g.person !== s.person)
+    .sort((a, b) => b.probs[s.true] - a.probs[s.true])[0];
+  const cls = { walking: "c-cyan", upstairs: "c-pink", downstairs: "c-yellow" };
+  $("spotCap").innerHTML = `The mistake: truly <b class="${cls[s.true]}">${SHORT[s.true].toLowerCase()}</b>, predicted <b class="${cls[s.pred]}">${SHORT[s.pred].toLowerCase()}</b>`;
+  $("compCap").innerHTML = `For comparison: a correctly predicted <b class="${cls[s.true]}">${SHORT[s.true].toLowerCase()}</b> window from another volunteer`;
   $("spotText").textContent = DATA.spotlight.explanation;
   drawTrace($("spotTrace"), s);
   drawTrace($("compTrace"), comp);
   windowScene($("spotTruth"), s, s.true, "REALLY: " + Scenes.CALLS[s.true]);
   windowScene($("spotModel"), s, s.pred, "MODEL: " + Scenes.CALLS[s.pred]);
-  windowScene($("compScene"), comp, "walking", "REALLY: " + Scenes.CALLS.walking);
-  $("spotStats").textContent = `Person #${s.person} · ${s.steps_per_sec} steps/s · model: ${Math.round(s.probs.upstairs * 100)}% stairs up`;
-  $("compStats").textContent = `Person #${comp.person} · ${comp.steps_per_sec} steps/s · model: ${Math.round(comp.probs.walking * 100)}% walking`;
+  windowScene($("compScene"), comp, comp.true, "REALLY: " + Scenes.CALLS[comp.true]);
+  $("spotStats").textContent = `Volunteer #${s.person} · ${s.steps_per_sec} steps/s · model: ${Math.round(s.probs[s.pred] * 100)}% ${SHORT[s.pred].toLowerCase()}`;
+  $("compStats").textContent = `Volunteer #${comp.person} · ${comp.steps_per_sec} steps/s · model: ${Math.round(comp.probs[comp.true] * 100)}% ${SHORT[comp.true].toLowerCase()}`;
 }
 
 // ---------- results ----------
@@ -171,7 +176,8 @@ function renderResults() {
   $("bars").innerHTML = `
     <div class="barrow"><span>Neural network</span><div class="track"><div class="fill" style="width:${s.nn_accuracy * 100}%"></div></div><b>${pct(s.nn_accuracy)}</b></div>
     <div class="barrow"><span>Baseline</span><div class="track"><div class="fill base" style="width:${s.baseline_accuracy * 100}%"></div></div><b>${pct(s.baseline_accuracy)}</b></div>`;
-  $("baselineNote").textContent = `Baseline rule: ${s.baseline_rule.replace("downstairs", "going down stairs")}. The three activities are equally common in the test set, so any always-the-same guess is right one-third of the time.`;
+  $("baselineNote").textContent = `Baseline rule: always guess "walking", the most common activity in the training data. It is right only when the test volunteer really was walking (${s.test_counts.walking} of ${s.n_test_windows.toLocaleString()} test windows).`;
+  $("resultsHint").textContent = `Scored on ${s.n_test_windows.toLocaleString()} windows from ${s.n_test_people} test volunteers the model never saw (it trained on ${s.n_train_people} other volunteers).`;
   const A = DATA.activities, cm = s.confusion_matrix;
   let html = `<tr><th>true ↓ / predicted →</th>${A.map((a) => `<th>${SHORT[a]}</th>`).join("")}</tr>`;
   A.forEach((a, i) => {

@@ -19,16 +19,16 @@ const SUGGESTIONS = [
   "Where did your data come from?",
   "How did your model compare with the baseline?",
   "How well would this model work on a dataset you never tested?",
-  "Why did the model think the slow walker was climbing stairs?",
+  "Why did the model think volunteer 9 was walking?",
 ];
 
 // ---------- pick the relevant guide sections for a question ----------
 const HINTS = {
   "Purpose": "purpose goal why exhibit about question discover point",
-  "Data": "data dataset come from source synthetic real fake simulated collected people windows uci recorded generated",
+  "Data": "data dataset come from source synthetic real fake simulated collected people volunteers windows uci recorded phone samsung license credit",
   "Model inputs and outputs": "model input inputs output features feature network neural layer neurons hidden train trained tuning alpha predict works how",
   "Test results": "result results accuracy accurate baseline compare compared comparison score test performance good well confusion recall percent mistakes",
-  "Highlighted mistake": "mistake wrong error spotlight slow walker why confused stairs barometer 1832 helped",
+  "Highlighted mistake": "mistake wrong error spotlight volunteer light-footed climber why confused stairs barometer gyroscope helped",
   "How to use the exhibit": "use play game guess animation figure buddy sound sounds music slow-mo filter playhead",
   "Limitations": "limitation limitations real phone other dataset never tested different generalize work smartwatch accurate trust medical weakness",
   "About the chatbot": "chatbot chat you language webllm webgpu llm ai bot",
