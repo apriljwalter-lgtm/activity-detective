@@ -27,6 +27,15 @@ async function init() {
     if (fn(on) !== false) { $(id).setAttribute("aria-pressed", on); label(on); }
   });
   toggle("musicBtn", (on) => Sound.setMusic(on), (on) => ($("musicBtn").querySelector(".mlabel").textContent = "🎵 Workout music: " + (on ? "ON" : "OFF")));
+  // Browsers block sound until the visitor interacts, so the music starts on the first click, tap, or key press
+  // anywhere on the page (clicking the music button itself still just toggles it).
+  const musicLabel = (on) => ($("musicBtn").querySelector(".mlabel").textContent = "🎵 Workout music: " + (on ? "ON" : "OFF"));
+  const autoStart = (e) => {
+    ["pointerdown", "keydown"].forEach((ev) => removeEventListener(ev, autoStart, true));
+    if (e.target.closest && e.target.closest("#musicBtn")) return;       // the button handles its own click
+    if (!Sound.state.music && Sound.setMusic(true) !== false) { $("musicBtn").setAttribute("aria-pressed", true); musicLabel(true); }
+  };
+  ["pointerdown", "keydown"].forEach((ev) => addEventListener(ev, autoStart, true));
   toggle("sfxBtn", (on) => Sound.setSfx(on), (on) => ($("sfxBtn").querySelector(".sk-state").textContent = on ? "footstep sounds are ON (click to turn off)" : "click to turn footstep sounds ON"));
   $("slowBtn").onclick = () => {
     const on = $("slowBtn").getAttribute("aria-pressed") !== "true";
