@@ -100,6 +100,8 @@ async function checkWebGPU() {
   }
 }
 
+function showRecorded() { $("recorded").hidden = false; $("recorded").open = true; }
+
 function setStatus(html, cls = "") {
   $("chatStatus").innerHTML = `<span class="${cls}">${html}</span>`;
   $("chatStatus").scrollIntoView({ block: "nearest", behavior: "smooth" });   // make sure the visitor sees it
@@ -123,6 +125,7 @@ async function enableChat() {
   const gpu = await checkWebGPU();
   if (!gpu.ok) {
     setStatus("Chat unavailable: " + gpu.why + " The rest of the exhibit still works.", "bad");
+    showRecorded();
     btn.disabled = false; $("modelChoice").disabled = false; btn.textContent = "⚡ Enable chat";
     return;
   }
@@ -145,9 +148,11 @@ async function enableChat() {
     setStatus("Chat failed to load (" + (e.message || e) + "). The rest of the exhibit still works. Click Enable chat to try again, or pick the other model.", "bad");
     $("progressWrap").hidden = true;
     btn.disabled = false; $("modelChoice").disabled = false; btn.textContent = "⚡ Enable chat";
+    showRecorded();
     return;
   }
   $("progressWrap").hidden = true;
+  $("recorded").hidden = true;
   $("progressText").textContent = "";
   btn.hidden = true;
   $("modelPick").hidden = true;
@@ -209,7 +214,7 @@ buildSuggestions();
 setReady(false);
 $("enableChat").addEventListener("click", enableChat);
 $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); ask($("chatInput").value); });
-if (!("gpu" in navigator)) setStatus("Heads up: this browser doesn't report WebGPU support, so chat probably won't load here. Everything else works.", "bad");
+if (!("gpu" in navigator)) { setStatus("Heads up: this browser doesn't report WebGPU support, so chat probably won't load here. Everything else works.", "bad"); showRecorded(); }
 
 // exposed for testing
 window.__chatTest = { splitGuide, relevantGuide, setSections: (md) => (SECTIONS = splitGuide(md)) };

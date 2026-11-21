@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 <header class="hero">
@@ -166,6 +166,14 @@
     <button id="enableChat" class="btn">⚡ Enable chat</button>
     <div id="progressWrap" class="progress" hidden><div id="progressBar"></div></div>
     <p id="progressText" class="small-note"></p>
+    <details id="recorded" class="recorded" hidden>
+      <summary>📼 See the chatbot's real answers from testing</summary>
+      <p class="small-note">The chatbot couldn't start on this device. These are its actual answers when it ran on our test laptop, copied word for word.</p>
+      <div class="rec"><p class="msg user">Where did your data come from?</p><p class="msg bot">The data is the public "Human Activity Recognition Using Smartphones" dataset from the UCI Machine Learning Repository (Anguita, Ghio, Oneto, Parra and Reyes-Ortiz, 2013), licensed CC BY 4.0.</p></div>
+      <div class="rec"><p class="msg user">How did your model compare with the baseline?</p><p class="msg bot">The model performed better than the baseline, with a difference of about 50 percentage points.</p></div>
+      <div class="rec"><p class="msg user">How well would this model work on a dataset you never tested?</p><p class="msg bot">The site guide doesn't cover that. The model was tested only on the 9 held-out volunteers from this one dataset.</p></div>
+      <p class="small-note">Full test notes, including what we checked and changed: <a href="https://github.com/apriljwalter-lgtm/activity-detective/blob/main/CHATBOT_TESTS.md">CHATBOT_TESTS.md</a></p>
+    </details>
     <div id="chatUI">
       <div id="chatLog" class="chat-log" aria-live="polite"></div>
       <div class="suggest" id="suggest"></div>
@@ -189,6 +197,6 @@
 <script src="js/net.js?v=20"></script>
 <script src="js/builder.js?v=21"></script>
 <script src="js/app.js?v=20"></script>
-<script type="module" src="js/chat.js?v=24"></script>
+<script type="module" src="js/chat.js?v=25"></script>
 </body>
 </html>
