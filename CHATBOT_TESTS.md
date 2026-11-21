@@ -2,7 +2,7 @@
 
 Ask each question on the live site (after clicking **Enable chat**), paste the chatbot's answer, then check it against the site guide and results. If the answer makes a claim the guide doesn't support, revise the guide or the system prompt and test again.
 
-**Demo device / browser:** _(e.g., Windows laptop, Chrome 13x. WebGPU supported? yes/no)_
+**Demo device / browser:** ASUS Zenbook laptop (built-in graphics). WebGPU worked in the first test session, when all three questions below were answered.
 
 ---
 
@@ -24,8 +24,7 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 
 **Supported by the guide?** ☐ Yes ☑ Partly (what was wrong/added: everything it said is true and matches the guide's "about 50 percentage points", but it left out the actual accuracies, 85.9% vs. 35.8%, and the test-set size) ☐ No
 
-**Retest after revision:**
->
+**Retest after revision:** not run. On the second test session the browser stopped giving the page access to the graphics chip, and the laptop then froze and had to be recovered. To avoid straining the laptop again, the retest was skipped. The revision is documented below.
 
 ---
 
