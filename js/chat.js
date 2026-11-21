@@ -87,8 +87,13 @@ ${excerpt}`;
 async function checkWebGPU() {
   if (!("gpu" in navigator)) return { ok: false, why: "This browser doesn't support WebGPU. Try a recent Chrome or Edge on a desktop or laptop." };
   try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) return { ok: false, why: "WebGPU is available, but no compatible graphics adapter was found on this device." };
+    // laptops can have two graphics chips; ask for each kind before giving up
+    let adapter = null;
+    for (const opts of [{ powerPreference: "high-performance" }, { powerPreference: "low-power" }, undefined]) {
+      adapter = await navigator.gpu.requestAdapter(opts).catch(() => null);
+      if (adapter) break;
+    }
+    if (!adapter) return { ok: false, why: "WebGPU is turned on, but the browser didn't give the page access to a graphics chip. This often happens after the browser's graphics process crashes or the computer wakes from sleep. Fully close and reopen the browser, then try again. If it still fails, check that hardware acceleration is on in the browser's settings (Settings → System)." };
     return { ok: true, f16: adapter.features.has("shader-f16") };
   } catch (e) {
     return { ok: false, why: "WebGPU check failed: " + e.message };
