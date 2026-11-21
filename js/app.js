@@ -14,6 +14,7 @@ async function init() {
     $("trace").textContent = "Could not load data/exhibit.json. If you opened this file directly, run a local web server or view it on GitHub Pages.";
     return;
   }
+  renderGlance();
   buildDeck();
   renderCard();
   renderSpotlight();
@@ -21,12 +22,12 @@ async function init() {
   loadGuide();
   $("nextBtn").onclick = () => { Sound.click(); pos = (pos + 1) % deck.length; renderCard(); };
   $("onlyMistakes").onchange = () => { buildDeck(); renderCard(); };
-  const toggle = (id, fn) => ($(id).onclick = () => {
+  const toggle = (id, fn, label) => ($(id).onclick = () => {
     const on = $(id).getAttribute("aria-pressed") !== "true";
-    if (fn(on) !== false) $(id).setAttribute("aria-pressed", on);
+    if (fn(on) !== false) { $(id).setAttribute("aria-pressed", on); label(on); }
   });
-  toggle("musicBtn", (on) => Sound.setMusic(on));
-  toggle("sfxBtn", (on) => Sound.setSfx(on));
+  toggle("musicBtn", (on) => Sound.setMusic(on), (on) => ($("musicBtn").querySelector(".mlabel").textContent = "🎵 Workout music: " + (on ? "ON" : "OFF")));
+  toggle("sfxBtn", (on) => Sound.setSfx(on), (on) => ($("sfxBtn").querySelector(".sk-state").textContent = on ? "footstep sounds are ON (click to turn off)" : "click to turn footstep sounds ON"));
   $("slowBtn").onclick = () => {
     const on = $("slowBtn").getAttribute("aria-pressed") !== "true";
     $("slowBtn").setAttribute("aria-pressed", on);
@@ -97,7 +98,7 @@ function renderCard() {
   $("cardCount").textContent = `Trace ${pos + 1} of ${deck.length}`;
   $("cardPerson").textContent = `Test volunteer #${w.person}`;
   drawTrace($("trace"), w);
-  windowScene($("gameScene"), w, "walking", "WHAT'S THEIR MOVE?", true, false); // silent until you guess
+  windowScene($("gameScene"), w, "walking", "WHAT'S HER MOVE?", true, false); // silent until you guess
   $("reveal").hidden = true;
   $("reveal").innerHTML = "";
   const row = $("guessRow");
@@ -186,6 +187,19 @@ function renderResults() {
   $("cm").innerHTML = html;
 }
 
+// ---------- at a glance ----------
+function renderGlance() {
+  const s = DATA.summary;
+  const people = s.n_train_people + s.n_test_people;
+  const chips = [
+    ["📱", `${people} real volunteers`, "UCI smartphone dataset", "#guide"],
+    ["🧠", "Small neural network", `${s.n_features} motion features`, "#results"],
+    ["🎯", `${pct(s.nn_accuracy)} correct`, `vs. ${pct(s.baseline_accuracy)} baseline`, "#results"],
+    ["🧪", `Tested on ${s.n_test_people} new people`, `${s.n_test_windows.toLocaleString()} windows it never saw`, "#results"],
+  ];
+  $("glance").innerHTML = chips.map(([i, a, b, href]) => `<a class="chip" href="${href}"><span class="ci">${i}</span><span><b>${a}</b><small>${b}</small></span></a>`).join("");
+}
+
 // ---------- guide ----------
 function mdToHtml(md) {
   const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -215,6 +229,13 @@ async function loadGuide() {
     const md = await (await fetch("guide.md")).text();
     window.SITE_GUIDE = md;
     $("guideBody").innerHTML = mdToHtml(md);
+    // fill the in-page "ⓘ" panels from the matching guide sections, so the page and the chatbot always agree
+    const sections = {};
+    md.split(/\n(?=## )/).slice(1).forEach((p) => { const nl = p.indexOf("\n"); sections[p.slice(3, nl).trim()] = p.slice(nl + 1); });
+    document.querySelectorAll("details.info").forEach((d) => {
+      const body = sections[d.dataset.sec];
+      if (body) d.querySelector(".info-body").innerHTML = mdToHtml(body);
+    });
   } catch (e) {
     $("guideBody").textContent = "Could not load guide.md.";
   }

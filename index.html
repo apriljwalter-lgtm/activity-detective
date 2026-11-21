@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <header class="hero">
@@ -16,6 +16,7 @@
     <h1><span>Wearable</span> Activity Detective</h1>
     <p class="lede">Your phone feels every step. Can a small neural network tell if you're <b class="c-cyan">walking</b>,
       <b class="c-pink">stepping up</b>, or <b class="c-yellow">stepping down</b> from the motion alone? Make your guess, then see what the model says. Feel the burn… of data science!</p>
+    <div class="glance" id="glance" aria-label="Project at a glance"></div>
     <div class="hero-scenes">
       <div class="scene" id="heroWalk"></div>
       <div class="scene" id="heroUp"></div>
@@ -23,6 +24,7 @@
     </div>
     <nav class="jump">
       <a href="#game">▶ Play</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a><a href="#chat" class="chat-jump">Chatbot</a>
+      <button id="musicBtn" class="music-btn" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="mlabel">🎵 Workout music: OFF</span></button>
     </nav>
   </div>
   <div class="hero-grid" aria-hidden="true"></div>
@@ -40,9 +42,13 @@
     </div>
     <p class="hint">Each trace is 2.56 seconds of real phone motion from a volunteer the model <b>never saw during training</b>.
       The yellow playhead sweeps the trace while our workout buddy steps along. Every peak in the cyan up–down line is about one footstep.
-      Their feet are hidden in the fog until you guess!</p>
-    <p class="sound-key">🔊 <b>Hear the steps</b> (turn on Sounds, bottom-left): the workout buddy stays silent until you guess. Then each footstep plays a note:
-      <span class="c-cyan">same note = walking</span> · <span class="c-pink">notes climbing up = stairs up</span> · <span class="c-yellow">notes going down = stairs down</span>.</p>
+      Her feet are hidden in the fog until you guess!</p>
+    <details class="info" data-sec="Data"><summary>ⓘ Where does this data come from?</summary><div class="info-body"></div></details>
+    <button id="sfxBtn" class="sound-key" aria-pressed="false">
+      <span class="sk-title">🔊 <b>Hear the steps</b> <span class="sk-state">click to turn footstep sounds ON</span></span>
+      <span class="sk-key">She stays silent until you guess. Then each footstep plays a note:
+      <span class="c-cyan">same note = walking</span> · <span class="c-pink">notes climbing up = stairs up</span> · <span class="c-yellow">notes going down = stairs down</span>.</span>
+    </button>
     <div class="trace-meta"><span id="cardCount"></span><span id="cardPerson"></span></div>
     <div class="viz-row">
       <div class="scene big" id="gameScene"></div>
@@ -82,6 +88,10 @@
   <section id="results" class="card">
     <h2><span class="num">3</span> How good is the model?</h2>
     <p class="hint" id="resultsHint">Scored on test volunteers the model never saw.</p>
+    <div class="info-row">
+      <details class="info" data-sec="Model inputs and outputs"><summary>ⓘ How does the model work?</summary><div class="info-body"></div></details>
+      <details class="info" data-sec="Test results"><summary>ⓘ How was it tested?</summary><div class="info-body"></div></details>
+    </div>
     <div class="results-grid">
       <div>
         <h3>Accuracy vs. a simple baseline</h3>
@@ -94,13 +104,17 @@
         <p class="small-note">Rows: what people were really doing. Columns: what the model predicted. The biggest problem: climbing stairs mistaken for walking.</p>
       </div>
     </div>
+    <div class="caution">
+      <p><b>⚠ Keep in mind:</b> this model was only tested on volunteers from one dataset (one phone model, worn at the waist). How well it works on other phones, people, or ways of carrying a phone is unknown. It's a classroom demo, not a medical device.</p>
+      <details class="info" data-sec="Limitations"><summary>ⓘ All limitations</summary><div class="info-body"></div></details>
+    </div>
   </section>
 
   <section id="guide" class="card">
-    <h2><span class="num">4</span> Site guide</h2>
+    <h2><span class="num">4</span> Full site guide</h2>
+    <p class="hint">Everything above in one place: purpose, data, model, results, the highlighted mistake, and limitations. The chatbot answers from this guide.</p>
     <details id="guideDetails" class="guide-details">
       <summary><span class="show">📖 Show the site guide</span><span class="hide">Hide the site guide</span></summary>
-      <p class="small-note">Purpose, data, model, test results, and limitations. The chatbot answers from this guide.</p>
       <div id="guideBody" class="guide">Loading guide…</div>
     </details>
   </section>
@@ -132,12 +146,6 @@
   </aside>
 </div>
 
-<div class="boombox" role="group" aria-label="Sound controls">
-  <span class="bb-label">📻 SOUND</span>
-  <button id="musicBtn" class="pill" aria-pressed="false">🎵 Music</button>
-  <button id="sfxBtn" class="pill" aria-pressed="false">🔊 Sounds</button>
-</div>
-
 <footer class="wrap foot">
   <p>Data: <a href="https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones">Human Activity Recognition Using Smartphones</a>,
     UCI Machine Learning Repository (Anguita, Ghio, Oneto, Parra &amp; Reyes-Ortiz, 2013), licensed CC BY 4.0. We use the walking, walking-upstairs and walking-downstairs body-acceleration windows.
@@ -146,8 +154,8 @@
 </footer>
 
 <script src="js/sound.js?v=8"></script>
-<script src="js/scene.js?v=11"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/scene.js?v=13"></script>
+<script src="js/app.js?v=14"></script>
 <script type="module" src="js/chat.js?v=11"></script>
 </body>
 </html>

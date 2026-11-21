@@ -165,12 +165,29 @@
     g += poly([hip, shoulder], pal.suit, 9);
     g += poly([hip, [lerp(hip[0], shoulder[0], 0.2), lerp(hip[1], shoulder[1], 0.2)]], "#170733", 9);
     const hd = S(head);
-    g += `<circle cx="${hd[0]}" cy="${hd[1]}" r="${HEAD}" fill="${skin}"/>`;
-    // big 80s hair + headband
-    g += `<path d="M${hd[0] - HEAD - 2} ${hd[1] + 1} Q${hd[0] - HEAD - 5} ${hd[1] - HEAD - 6} ${hd[0]} ${hd[1] - HEAD - 4} Q${hd[0] + HEAD + 4} ${hd[1] - HEAD - 5} ${hd[0] + HEAD + 1} ${hd[1] - 3}" fill="#ffb347" stroke="#ff8a3d" stroke-width="1"/>`;
-    g += `<line x1="${hd[0] - HEAD - 1}" y1="${hd[1] - 3}" x2="${hd[0] + HEAD + 1}" y2="${hd[1] - 5}" stroke="${pal.warm}" stroke-width="3.2" stroke-linecap="round"/>`;
-    g += `<circle cx="${hd[0] + 3.5}" cy="${hd[1] + 0.5}" r="1.3" fill="#170733"/>`;
-    g += `<path d="M${hd[0] + 1.5} ${hd[1] + 3.5} q2.5 2 5 0" stroke="#170733" stroke-width="1.1" fill="none"/>`;
+    const HAIR = "#5c2a14", HAIR_HI = "#9a5428";
+    // ponytail (drawn behind the head): swings and bounces with every step
+    const sway = 0.55 * Math.sin(Math.PI * c) - lean * 1.5, bounce = 3 * Math.abs(Math.sin(Math.PI * c));
+    const ax = hd[0] - HEAD * 0.75, ay = hd[1] - HEAD * 0.75;                     // scrunchie position
+    const rot = (dx, dy) => [ax + dx * Math.cos(sway) - dy * Math.sin(sway), ay + dx * Math.sin(sway) + dy * Math.cos(sway)];
+    const mid = rot(-14, 0 - bounce), tip = rot(-19, 19 - bounce), tip2 = rot(-10, 17 - bounce);
+    g += `<path d="M${ax} ${ay - 2} Q${mid[0]} ${mid[1] - 4} ${tip[0]} ${tip[1]} Q${tip2[0]} ${tip2[1]} ${ax + 1} ${ay + 3} Z" fill="${HAIR}" stroke="#170733" stroke-width="1"/>`;
+    g += `<path d="M${ax - 2} ${ay} Q${mid[0] + 1} ${mid[1] - 1} ${(tip[0] + tip2[0]) / 2} ${(tip[1] + tip2[1]) / 2 - 2}" fill="none" stroke="${HAIR_HI}" stroke-width="1.2" stroke-linecap="round"/>`;
+    g += `<circle cx="${ax}" cy="${ay}" r="2.8" fill="${pal.warm}" stroke="#170733" stroke-width="1"/>`;          // scrunchie
+    // face
+    g += `<circle cx="${hd[0]}" cy="${hd[1]}" r="${HEAD}" fill="${skin}" stroke="#170733" stroke-width=".8"/>`;
+    // hair cap with fringe
+    g += `<path d="M${hd[0] - HEAD - 0.5} ${hd[1] + 2} Q${hd[0] - HEAD - 2} ${hd[1] - HEAD - 3} ${hd[0] + 1} ${hd[1] - HEAD - 1.5} Q${hd[0] + HEAD + 2} ${hd[1] - HEAD} ${hd[0] + HEAD + 0.5} ${hd[1] - 2.5} Q${hd[0] + 3} ${hd[1] - 5} ${hd[0] - 1} ${hd[1] - 3.5} Q${hd[0] - 4} ${hd[1] - 1} ${hd[0] - HEAD - 0.5} ${hd[1] + 2} Z" fill="${HAIR}" stroke="#170733" stroke-width=".8"/>`;
+    // headband: matches the leotard, with a dark outline so it shows on every background
+    const hb1 = [hd[0] - HEAD + 0.5, hd[1] - 3.5], hb2 = [hd[0] + HEAD - 0.3, hd[1] - 5.2];
+    g += `<line x1="${hb1[0]}" y1="${hb1[1]}" x2="${hb2[0]}" y2="${hb2[1]}" stroke="#170733" stroke-width="5.4" stroke-linecap="round"/>`;
+    g += `<line x1="${hb1[0]}" y1="${hb1[1]}" x2="${hb2[0]}" y2="${hb2[1]}" stroke="${pal.suit}" stroke-width="3.6" stroke-linecap="round"/>`;
+    g += `<line x1="${hb1[0] + 1}" y1="${hb1[1] - 0.9}" x2="${hb2[0] - 1}" y2="${hb2[1] - 0.9}" stroke="#fff" stroke-width=".9" opacity=".7" stroke-linecap="round"/>`;
+    // eye with lashes, blush, lips
+    g += `<circle cx="${hd[0] + 3.6}" cy="${hd[1] + 0.3}" r="1.3" fill="#170733"/>`;
+    g += `<path d="M${hd[0] + 2.4} ${hd[1] - 0.9} l-0.9 -1.4 M${hd[0] + 3.6} ${hd[1] - 1.1} l0 -1.6 M${hd[0] + 4.8} ${hd[1] - 0.9} l0.9 -1.4" stroke="#170733" stroke-width=".7" stroke-linecap="round"/>`;
+    g += `<circle cx="${hd[0] + 1.8}" cy="${hd[1] + 3.2}" r="1.8" fill="#ff6fb5" opacity=".55"/>`;
+    g += `<path d="M${hd[0] + 4.2} ${hd[1] + 4.2} q1.6 1.3 3.2 -0.2" stroke="#e8337f" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
     limbs.filter((l) => !l.back).forEach((l) => (g += drawLimb(l, skin, false)));
     // phone on the hip — the sensor!
     const ph = S([hip[0] + 2, hip[1] + 4]);
