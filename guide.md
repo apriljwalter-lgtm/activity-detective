@@ -19,17 +19,20 @@ This exhibit asks: can a small neural network tell **walking** from **climbing s
 - **Most important clues:** measured with permutation importance (shuffle one clue across the test windows and see how much accuracy drops). The top five are Shake variety (accuracy drops 18.2 points), Fast energy (10.9), Step rhythm (7.4), Bounce range (7.2), and Lopsidedness (6.6).
 
 ## Test results
+- **Headline result: the neural network was correct 85.9% of the time on the test set. The baseline was correct 35.8% of the time.** The network beat the baseline by about 50 percentage points.
 - **Test set:** the dataset's own split by person. 9 volunteers (1,387 windows) were kept out of training and tuning, so the test shows how well the model works on new people. No volunteer appears in both the training and test sets.
-- **Neural network accuracy on the test set: 85.9%.**
-- **Baseline accuracy: 35.8%.** The baseline always guesses "walking", the most common activity in the training data. It is right only for the 496 test windows where the volunteer really was walking.
-- The network beat the baseline by about 50 percentage points.
+- **The baseline** always guesses "walking", the most common activity in the training data. That is why it is right only 35.8% of the time: it is correct only for the 496 test windows where the volunteer really was walking.
 - Per-activity recall (the share of each true activity the model got right): walking 98.4%, climbing stairs up 75.6%, going down stairs 82.6%.
 - Confusion matrix (rows are the true activity, columns are the prediction, in the order walking / up / down):
   - True walking: 488 walking, 6 up, 2 down
   - True stairs up: 105 walking, 356 up, 10 down
   - True stairs down: 22 walking, 51 up, 347 down
 - The most common mistake was climbing stairs up predicted as walking (105 of the 196 mistakes). The model leans toward answering "walking".
-- Accuracy differed a lot between test volunteers: from 67.1% for volunteer 9 to 98.8% for volunteer 24.
+
+## Results for each volunteer
+- The network's accuracy was different for each of the 9 test volunteers. These numbers are about individual people, not about the baseline or about any one activity.
+- The lowest was volunteer 9, at 67.1% of their windows correct. The highest was volunteer 24, at 98.8% of their windows correct.
+- This means the network works much better for some people's way of moving than for others.
 
 ## Highlighted mistake
 Test window #377 comes from volunteer 9, who was truly **climbing stairs up**. The model predicted **walking** with 100% confidence. This volunteer climbed with quick, light steps. The window had a step rhythm of 1.86 steps per second (typical walking: 1.76; typical stair climbing: 1.61), an up-down bounce of 0.150 g (typical walking: 0.220 g; typical stair climbing: 0.249 g), and a strongest jolt of 0.45 g (typical walking: 0.69 g; typical stair climbing: 0.75 g). All three numbers look more like walking than stair climbing in the training data. The window also had very high Fast energy (0.331, compared with a typical 0.200 for walking and 0.101 for stair climbing). In the "Build your own walker" section, lowering only the Fast energy slider flips the network's answer to stairs up (68%), so this clue was a big reason for the mistake. An accelerometer can't feel height change directly, so walking and stairs can look alike. Things that might have helped include a barometer (air-pressure) reading to detect going up or down, longer windows so the model sees more steps, the gyroscope signals that the dataset also includes, and more training volunteers with different walking styles.

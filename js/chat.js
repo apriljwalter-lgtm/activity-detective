@@ -39,7 +39,8 @@ const HINTS = {
   "Purpose": "purpose goal why exhibit about question discover point",
   "Data": "data dataset come from source synthetic real fake simulated collected people volunteers windows uci recorded phone samsung license credit",
   "Model inputs and outputs": "model input inputs output features feature network neural layer neurons hidden train trained tuning alpha predict works how",
-  "Test results": "result results accuracy accurate baseline compare compared comparison score test performance good well confusion recall percent mistakes",
+  "Test results": "result results accuracy accurate baseline compare compared comparison score test performance good well confusion recall percent mistakes headline beat",
+  "Results for each volunteer": "volunteer volunteers individual each every person people equally equal consistent consistency fair fairness different differ lowest highest some others",
   "Highlighted mistake": "mistake wrong error spotlight volunteer light-footed climber why confused stairs barometer gyroscope helped",
   "How to use the exhibit": "use play game guess animation figure buddy lady sound sounds music slow-mo filter playhead build builder slider sliders challenge preset peek inside neurons glow",
   "Limitations": "limitation limitations real phone other dataset never tested different generalize work smartwatch accurate trust medical weakness",
@@ -76,7 +77,8 @@ function systemPrompt(excerpt) {
   return `You answer visitor questions for a web exhibit called "Wearable Activity Detective".
 Use ONLY the GUIDE EXCERPT below.
 - If the excerpt does not answer the question, say "The site guide doesn't cover that." and then mention anything related it does say. Never invent numbers, datasets, or results.
-- Always include the specific numbers from the excerpt that answer the question (for example both accuracies, not just the difference), copied exactly.
+- Include the key numbers that directly answer the question, copied exactly, and say what each one measures in the excerpt's own words.
+- Only use a number for exactly what the excerpt says it measures. Never move a number to a different meaning, combine numbers, or add claims the excerpt doesn't make.
 - Answer in 2-4 short sentences of plain language.
 
 GUIDE EXCERPT:
