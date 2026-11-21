@@ -33,9 +33,9 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 **What a correct answer should say:** the guide doesn't say, because the model was never tested on another dataset. The answer should note that accuracy on other phones, people or carrying positions is unknown and could be much lower, since all the data came from one phone model worn at the waist. It should **not** give a made-up accuracy number.
 
 **Chatbot answer:**
->
+> The site guide doesn't cover that. The model was tested only on the 9 held-out volunteers from this one dataset.
 
-**Supported by the guide?** ☐ Yes ☐ Partly (what was wrong/added: ______) ☐ No
+**Supported by the guide?** ☑ Yes ☐ Partly ☐ No. It correctly said the guide doesn't cover this, didn't invent an accuracy number, and gave a true related fact from the Limitations section. It could also have mentioned that accuracy on other phones or people is unknown and could be much lower, but nothing it said was wrong.
 
 ---
 
