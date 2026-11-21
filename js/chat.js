@@ -8,7 +8,19 @@ const MODELS = {
   quality: { f16: "Llama-3.2-1B-Instruct-q4f16_1-MLC", f32: "Llama-3.2-1B-Instruct-q4f32_1-MLC", label: "Llama 3.2 1B" },
   fast:    { f16: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", f32: "Qwen2.5-0.5B-Instruct-q4f32_1-MLC", label: "Qwen 2.5 0.5B" },
 };
-const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
+// the WebLLM library is downloaded from a CDN; if one source fails, try the next
+const WEBLLM_URLS = [
+  "https://esm.run/@mlc-ai/web-llm",
+  "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/+esm",
+  "https://unpkg.com/@mlc-ai/web-llm?module",
+];
+async function loadWebLLM() {
+  let lastErr;
+  for (const url of WEBLLM_URLS) {
+    try { return await import(url); } catch (e) { lastErr = e; console.warn("WebLLM source failed:", url, e); }
+  }
+  throw lastErr;
+}
 
 const $ = (id) => document.getElementById(id);
 let engine = null;
@@ -83,7 +95,10 @@ async function checkWebGPU() {
   }
 }
 
-function setStatus(html, cls = "") { $("chatStatus").innerHTML = `<span class="${cls}">${html}</span>`; }
+function setStatus(html, cls = "") {
+  $("chatStatus").innerHTML = `<span class="${cls}">${html}</span>`;
+  $("chatStatus").scrollIntoView({ block: "nearest", behavior: "smooth" });   // make sure the visitor sees it
+}
 
 function addMsg(role, text) {
   const d = document.createElement("div");
@@ -98,10 +113,12 @@ async function enableChat() {
   const btn = $("enableChat");
   btn.disabled = true;
   $("modelChoice").disabled = true;
+  btn.textContent = "⏳ Loading…";
+  setStatus("Checking your browser for WebGPU…");
   const gpu = await checkWebGPU();
   if (!gpu.ok) {
     setStatus("Chat unavailable: " + gpu.why + " The rest of the exhibit still works.", "bad");
-    btn.disabled = false; $("modelChoice").disabled = false;
+    btn.disabled = false; $("modelChoice").disabled = false; btn.textContent = "⚡ Enable chat";
     return;
   }
   const guide = window.SITE_GUIDE || (await (await fetch("guide.md")).text());
@@ -111,7 +128,7 @@ async function enableChat() {
   setStatus("WebGPU detected ✓ Downloading and warming up " + choice.label + ". The first load can take a few minutes; later loads use your browser's cache.");
   $("progressWrap").hidden = false;
   try {
-    const webllm = await import(WEBLLM_URL);
+    const webllm = await loadWebLLM();
     engine = await webllm.CreateMLCEngine(model, {
       initProgressCallback: (r) => {
         $("progressBar").style.width = Math.round((r.progress || 0) * 100) + "%";
@@ -120,9 +137,9 @@ async function enableChat() {
     });
   } catch (e) {
     console.error(e);
-    setStatus("Chat failed to load (" + (e.message || e) + "). The rest of the exhibit still works. You can try again, or pick the other model.", "bad");
+    setStatus("Chat failed to load (" + (e.message || e) + "). The rest of the exhibit still works. Click Enable chat to try again, or pick the other model.", "bad");
     $("progressWrap").hidden = true;
-    btn.disabled = false; $("modelChoice").disabled = false;
+    btn.disabled = false; $("modelChoice").disabled = false; btn.textContent = "⚡ Enable chat";
     return;
   }
   $("progressWrap").hidden = true;
