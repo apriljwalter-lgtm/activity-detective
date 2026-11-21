@@ -64,8 +64,8 @@ function systemPrompt(excerpt) {
   return `You answer visitor questions for a web exhibit called "Wearable Activity Detective".
 Use ONLY the GUIDE EXCERPT below.
 - If the excerpt does not answer the question, say "The site guide doesn't cover that." and then mention anything related it does say. Never invent numbers, datasets, or results.
-- Use the exact numbers from the excerpt.
-- Answer in 2-3 short sentences of plain language.
+- Always include the specific numbers from the excerpt that answer the question (for example both accuracies, not just the difference), copied exactly.
+- Answer in 2-4 short sentences of plain language.
 
 GUIDE EXCERPT:
 ${excerpt}`;
@@ -165,7 +165,7 @@ async function ask(q) {
   const msgs = [{ role: "system", content: systemPrompt(relevantGuide(q)) }, { role: "user", content: q }];
   let reply = "";
   try {
-    const stream = await engine.chat.completions.create({ messages: msgs, stream: true, temperature: 0.2, max_tokens: 160 });
+    const stream = await engine.chat.completions.create({ messages: msgs, stream: true, temperature: 0.2, max_tokens: 200 });
     for await (const chunk of stream) {
       reply += chunk.choices[0]?.delta?.content || "";
       bubble.textContent = reply;

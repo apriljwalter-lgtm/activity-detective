@@ -19,10 +19,13 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 ## 2. Results: "How did your model compare with the baseline?"
 **What a correct answer should say:** on 1,387 test windows from 9 held-out volunteers, the neural network scored 85.9% accuracy and the always-guess-"walking" baseline scored 35.8%, a gap of about 50 points. The most common mistake was stairs up predicted as walking.
 
-**Chatbot answer:**
->
+**Chatbot answer (first test):**
+> The model performed better than the baseline, with a difference of about 50 percentage points.
 
-**Supported by the guide?** ☐ Yes ☐ Partly (what was wrong/added: ______) ☐ No
+**Supported by the guide?** ☐ Yes ☑ Partly (what was wrong/added: everything it said is true and matches the guide's "about 50 percentage points", but it left out the actual accuracies, 85.9% vs. 35.8%, and the test-set size) ☐ No
+
+**Retest after revision:**
+>
 
 ---
 
@@ -37,4 +40,4 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 ---
 
 ## Revisions made after testing
-- _(e.g., "Chatbot said the data came from UCI HAR. Added 'No UCI data was used' to the Data section.")_
+- **Question 2 answer was correct but vague** (gave only "about 50 percentage points"). Revised the chatbot's instructions in `js/chat.js` to always include the specific numbers from the guide (percentages, counts) when it answers, and allowed up to 4 sentences so it has room for them.
