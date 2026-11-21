@@ -10,9 +10,9 @@ Ask each question on the live site (after clicking **Enable chat**), paste the c
 **What a correct answer should say:** the data is real, from the public UCI "Human Activity Recognition Using Smartphones" dataset (Anguita et al., 2013). 30 volunteers wore a Samsung Galaxy S II on the waist, and the recordings are 2.56-second windows. The exhibit uses only walking, walking upstairs and walking downstairs: 4,672 windows (21 training volunteers, 9 test volunteers).
 
 **Chatbot answer:**
->
+> The data is the public "Human Activity Recognition Using Smartphones" dataset from the UCI Machine Learning Repository (Anguita, Ghio, Oneto, Parra and Reyes-Ortiz, 2013), licensed CC BY 4.0.
 
-**Supported by the guide?** ☐ Yes ☐ Partly (what was wrong/added: ______) ☐ No
+**Supported by the guide?** ☑ Yes ☐ Partly ☐ No. The dataset name, source, authors, year and license all match the guide's Data section exactly. It is brief: it doesn't mention the 30 volunteers wearing a phone at the waist or the 2.56-second windows, but it adds nothing unsupported.
 
 ---
 
