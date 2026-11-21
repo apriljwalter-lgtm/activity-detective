@@ -130,6 +130,7 @@ async function enableChat() {
   btn.hidden = true;
   $("modelPick").hidden = true;
   setStatus("Chat ready ✓ (" + choice.label + "). Answers come only from the site guide.", "good");
+  $("chat").classList.add("ready");   // hide the intro text to make room for the conversation
   setReady(true);
   addMsg("bot", "Hi! Type any question about the data, the model, its results, or the mistake spotlight.");
   $("chatInput").focus();
