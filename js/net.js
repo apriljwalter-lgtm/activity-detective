@@ -38,7 +38,7 @@
   }
 
   // ---------- drawing ----------
-  function render(el, net, w, revealed) {
+  function render(el, net, w, revealed, opts = {}) {
     const acts = forward(net, w.feats);
     const W = 940, H = 560, top = 34, bot = 24;
     const xs = [150, 400, 630, 800];
@@ -111,7 +111,7 @@
     s = s.replace('<text x="150" y="18"', edges + '<text x="150" y="18"');
 
     el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="net-svg" role="img" aria-label="Diagram of the neural network's neurons lighting up for this trace">${s}</svg>`;
-    el.classList.remove("flow"); void el.offsetWidth; el.classList.add("flow");   // replay the left-to-right "signal flow" animation
+    if (!opts.noFlow) { el.classList.remove("flow"); void el.offsetWidth; el.classList.add("flow"); }   // replay the left-to-right "signal flow" animation
   }
 
   function explain(el, net, w, revealed) {

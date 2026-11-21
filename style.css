@@ -174,6 +174,32 @@ details.info[open] summary{background:var(--cyan);color:#170733}
 .net-why ul{margin:6px 0;padding-left:20px}
 @media (prefers-reduced-motion:reduce){.flow *{animation:none!important}}
 
+/* build your own walker */
+.preset-row{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.preset{font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);background:#0f0424;border:2px solid var(--line);border-radius:999px;padding:6px 14px}
+.preset:hover{border-color:var(--cyan)}
+.preset.on{background:var(--cyan);color:#170733;border-color:var(--cyan)}
+.preset[data-k="mistake"]{border-color:var(--pink)}
+.preset[data-k="mistake"].on{background:var(--pink);border-color:var(--pink)}
+.builder-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:start}
+.build-answer{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:12px 0 4px}
+.ba-label{font-size:13px;color:var(--muted)}
+.ba-pred{font-family:var(--display);font-size:26px}
+.ba-pct{font-size:15px;font-weight:700}
+.sliders{display:flex;flex-direction:column;gap:16px}
+.slider label{display:block;font-size:14px;margin-bottom:6px}
+.slider label .val{float:right;font-family:var(--display);color:var(--yellow)}
+.slider label small{display:block;color:var(--muted);font-size:12px}
+.track-wrap{position:relative;padding-bottom:10px}
+.track-wrap input[type=range]{width:100%;accent-color:var(--pink);cursor:pointer}
+.tick{position:absolute;bottom:0;width:10px;height:8px;margin-left:-5px;border-radius:2px;pointer-events:auto}
+.challenge{margin-top:18px;padding:12px 16px;border:2px dashed var(--pink);border-radius:12px;background:rgba(255,62,165,.07);font-size:14px}
+.challenge.active{box-shadow:0 0 16px rgba(255,62,165,.35)}
+.challenge.won{border-style:solid;border-color:var(--lime);background:rgba(125,255,106,.08)}
+.challenge-win{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--lime);color:#170733;animation:pop .35s ease-out}
+#builder .net-panel{margin-top:16px}
+@media (max-width:1100px){.builder-grid{grid-template-columns:1fr}#buildScene{max-width:520px}}
+
 /* spotlight */
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .pair figure{margin:0}

@@ -262,5 +262,12 @@
   }
   requestAnimationFrame(frame);
 
-  window.Scenes = { createScene, registerPlayhead, firstPeakTime, NAMES, CALLS, COLORS, render: renderScene };
+  // change a scene's pace without making the figure jump: keep the number of steps taken so far the same
+  function setPace(sc, f) {
+    const o = sc.opts, fOld = o.f || 1.8, cOld = (sim - (o.t0 || 0)) * fOld;
+    o.f = Math.max(0.5, f);
+    o.t0 = sim - cOld / o.f;
+  }
+
+  window.Scenes = { createScene, setPace, registerPlayhead, firstPeakTime, NAMES, CALLS, COLORS, render: renderScene };
 })();

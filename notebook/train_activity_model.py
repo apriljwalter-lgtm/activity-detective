@@ -173,6 +173,19 @@ per_person = pd.DataFrame({"person": g_test, "correct": pred == y_test}).groupby
 print("Accuracy for each test volunteer:\n", (per_person * 100).round(1).to_string())
 
 # %% [markdown]
+# ### Which clues does the network rely on most?
+# **Permutation importance:** shuffle one clue across the test windows (breaking its link to the activity) and see how
+# much accuracy drops. A big drop means the network leans on that clue. The website's "Build your own walker" sliders
+# use the top 5.
+
+# %%
+from sklearn.inspection import permutation_importance
+imp = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=0)
+importance = pd.Series(imp.importances_mean, index=FEATURE_NAMES).sort_values(ascending=False)
+TOP_FEATURES = list(importance.index[:5])
+print((importance * 100).round(1).rename("accuracy drop (points)").to_string())
+
+# %% [markdown]
 # ## 5. Look closely at one mistake
 # We look at the most common kind of mistake and pick the example the network was **most confident** about.
 
@@ -270,6 +283,11 @@ exhibit["network"] = {
     "scaler_mean": np.round(scaler.mean_, 6).tolist(), "scaler_scale": np.round(scaler.scale_, 6).tolist(),
     "weights": [np.round(W, 5).tolist() for W in mlp.coefs_],
     "biases": [np.round(b, 5).tolist() for b in mlp.intercepts_],
+    # for the "build your own walker" sliders: each clue's usual range and each activity's typical (median) values
+    "top_features": TOP_FEATURES,
+    "importance": {f: round(float(v), 4) for f, v in importance.items()},
+    "ranges": {f: [round(float(feat_tr[f].quantile(0.02)), 4), round(float(feat_tr[f].quantile(0.98)), 4)] for f in FEATURE_NAMES},
+    "typical": {a: [round(float(v), 6) for v in typical.loc[a, FEATURE_NAMES]] for a in ACTIVITIES},
 }
 OUT_DIR = "../data" if os.path.isdir("../data") else "."
 with open(os.path.join(OUT_DIR, "exhibit.json"), "w") as fh:

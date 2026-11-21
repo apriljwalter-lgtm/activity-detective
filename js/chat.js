@@ -29,7 +29,7 @@ const HINTS = {
   "Model inputs and outputs": "model input inputs output features feature network neural layer neurons hidden train trained tuning alpha predict works how",
   "Test results": "result results accuracy accurate baseline compare compared comparison score test performance good well confusion recall percent mistakes",
   "Highlighted mistake": "mistake wrong error spotlight volunteer light-footed climber why confused stairs barometer gyroscope helped",
-  "How to use the exhibit": "use play game guess animation figure buddy sound sounds music slow-mo filter playhead",
+  "How to use the exhibit": "use play game guess animation figure buddy lady sound sounds music slow-mo filter playhead build builder slider sliders challenge preset peek inside neurons glow",
   "Limitations": "limitation limitations real phone other dataset never tested different generalize work smartwatch accurate trust medical weakness",
   "About the chatbot": "chatbot chat you language webllm webgpu llm ai bot",
 };

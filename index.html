@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <header class="hero">
@@ -24,7 +24,7 @@
       <div class="scene" id="heroDown"></div>
     </div>
     <nav class="jump">
-      <a href="#game">▶ Play</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a><a href="#chat" class="chat-jump">Chatbot</a>
+      <a href="#game">▶ Play</a><a href="#builder">Build a walker</a><a href="#spotlight">Mistake spotlight</a><a href="#results">Results</a><a href="#guide">Site guide</a><a href="#chat" class="chat-jump">Chatbot</a>
       <button id="musicBtn" class="music-btn" aria-pressed="false"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="mlabel">🎵 Workout music: OFF</span></button>
     </nav>
   </div>
@@ -75,8 +75,30 @@
     </details>
   </section>
 
+  <section id="builder" class="card">
+    <h2><span class="num">2</span> Build your own walker</h2>
+    <p class="hint">Drag the sliders to change the <b>5 clues the network relies on most</b> (the ones that hurt its accuracy most when scrambled).
+      The real network re-runs instantly, and our workout buddy acts out whatever it thinks. The other 11 clues stay at the preset's values.
+      Colored ticks under each slider mark the typical <span class="c-cyan">walking</span>, <span class="c-pink">stairs up</span>, and <span class="c-yellow">stairs down</span> values.</p>
+    <div class="preset-row" id="presetRow"></div>
+    <div class="builder-grid">
+      <div>
+        <div class="scene" id="buildScene"></div>
+        <div class="build-answer" id="buildAnswer"></div>
+        <div id="buildBars"></div>
+      </div>
+      <div class="sliders" id="sliders"></div>
+    </div>
+    <div class="challenge" id="challenge"></div>
+    <p class="challenge-win" id="challengeWin" hidden>🎉 <b>Radical! You fixed the mistake.</b> Look at which sliders you had to move. Those are the clues that made this real stair climb look like walking.</p>
+    <details id="buildNetPanel" class="net-panel">
+      <summary><span class="show">🧠 Watch the network while you slide</span><span class="hide">🧠 Hide the network</span></summary>
+      <div id="buildNetView" class="net-view"></div>
+    </details>
+  </section>
+
   <section id="spotlight" class="card">
-    <h2><span class="num">2</span> Mistake spotlight: the light-footed stair climber</h2>
+    <h2><span class="num">3</span> Mistake spotlight: the light-footed stair climber</h2>
     <p id="spotText" class="hint"></p>
     <div class="pair">
       <figure>
@@ -95,7 +117,7 @@
   </section>
 
   <section id="results" class="card">
-    <h2><span class="num">3</span> How good is the model?</h2>
+    <h2><span class="num">4</span> How good is the model?</h2>
     <p class="hint" id="resultsHint">Scored on test volunteers the model never saw.</p>
     <div class="info-row">
       <details class="info" data-sec="Model inputs and outputs"><summary>ⓘ How does the model work?</summary><div class="info-body"></div></details>
@@ -120,7 +142,7 @@
   </section>
 
   <section id="guide" class="card">
-    <h2><span class="num">4</span> Full site guide</h2>
+    <h2><span class="num">5</span> Full site guide</h2>
     <p class="hint">Everything above in one place: purpose, data, model, results, the highlighted mistake, and limitations. The chatbot answers from this guide.</p>
     <details id="guideDetails" class="guide-details">
       <summary><span class="show">📖 Show the site guide</span><span class="hide">Hide the site guide</span></summary>
@@ -163,9 +185,10 @@
 </footer>
 
 <script src="js/sound.js?v=8"></script>
-<script src="js/scene.js?v=13"></script>
-<script src="js/net.js?v=17"></script>
-<script src="js/app.js?v=16"></script>
-<script type="module" src="js/chat.js?v=18"></script>
+<script src="js/scene.js?v=20"></script>
+<script src="js/net.js?v=20"></script>
+<script src="js/builder.js?v=21"></script>
+<script src="js/app.js?v=20"></script>
+<script type="module" src="js/chat.js?v=21"></script>
 </body>
 </html>

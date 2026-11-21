@@ -17,6 +17,7 @@ async function init() {
   renderGlance();
   buildDeck();
   renderCard();
+  Builder.init(DATA);
   renderSpotlight();
   renderResults();
   loadGuide();
