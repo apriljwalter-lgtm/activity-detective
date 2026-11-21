@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 <header class="hero">
@@ -65,6 +65,14 @@
       <div class="score">YOU <b id="youScore">0</b>/<span id="played">0</span> <span class="vs">VS</span> MODEL <b id="modelScore">0</b>/<span id="played2">0</span></div>
       <button id="nextBtn" class="btn ghost">Next trace →</button>
     </div>
+    <details id="netPanel" class="net-panel">
+      <summary><span class="show">🧠 Peek inside the neural network</span><span class="hide">🧠 Hide the neural network</span></summary>
+      <p class="hint">This is the real trained network deciding about the trace above. The <b>16 clues</b> on the left are measured from the motion
+        (<span class="c-cyan">cyan = higher than average</span>, <span class="c-pink">pink = lower</span>). Each yellow circle is a neuron; the brighter it glows, the more active it is.
+        Lines show how strongly one neuron pushes the next: <span class="c-cyan">cyan pushes up</span>, <span class="c-pink">pink pushes down</span>. Hover over a circle for details.</p>
+      <div id="netView" class="net-view"></div>
+      <div id="netWhy" class="net-why"></div>
+    </details>
   </section>
 
   <section id="spotlight" class="card">
@@ -156,7 +164,8 @@
 
 <script src="js/sound.js?v=8"></script>
 <script src="js/scene.js?v=13"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/net.js?v=17"></script>
+<script src="js/app.js?v=16"></script>
 <script type="module" src="js/chat.js?v=11"></script>
 </body>
 </html>

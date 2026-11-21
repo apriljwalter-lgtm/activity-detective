@@ -22,6 +22,7 @@ async function init() {
   loadGuide();
   $("nextBtn").onclick = () => { Sound.click(); pos = (pos + 1) % deck.length; renderCard(); };
   $("onlyMistakes").onchange = () => { buildDeck(); renderCard(); };
+  $("netPanel").addEventListener("toggle", drawNet);
   const toggle = (id, fn, label) => ($(id).onclick = () => {
     const on = $(id).getAttribute("aria-pressed") !== "true";
     if (fn(on) !== false) { $(id).setAttribute("aria-pressed", on); label(on); }
@@ -110,6 +111,7 @@ function renderCard() {
   windowScene($("gameScene"), w, "walking", "WHAT'S HER MOVE?", true, false); // silent until you guess
   $("reveal").hidden = true;
   $("reveal").innerHTML = "";
+  drawNet();
   const row = $("guessRow");
   row.innerHTML = "";
   for (const a of DATA.activities) {
@@ -158,6 +160,15 @@ function guess(a, btn) {
     </div>`;
   $("reveal").hidden = false;
   windowScene($("modelScene"), w, w.pred, "MODEL: " + Scenes.CALLS[w.pred]);
+  drawNet();
+}
+
+// ---------- inside the network ----------
+function drawNet() {
+  if (!DATA.network || !$("netPanel").open) return;
+  const w = deck[pos];
+  NetView.render($("netView"), DATA.network, w, guessed);
+  NetView.explain($("netWhy"), DATA.network, w, guessed);
 }
 
 // ---------- spotlight ----------

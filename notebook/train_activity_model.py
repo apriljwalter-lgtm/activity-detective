@@ -239,6 +239,7 @@ def pack(i):
         "id": int(i), "person": int(g_test[i]), "true": y_test[i], "pred": pred[i],
         "probs": {c: round(float(p), 3) for c, p in zip(classes, proba[i])},
         "steps_per_sec": round(float(feat_te.step_freq.iloc[i]), 2),
+        "feats": [round(float(v), 6) for v in feat_te.iloc[i].values],   # the 16 inputs the network sees
         "x": np.round(traces_te[i, 0], 3).tolist(),   # forward-back
         "y": np.round(traces_te[i, 1], 3).tolist(),   # side-side
         "z": np.round(traces_te[i, 2], 3).tolist(),   # up-down
@@ -261,6 +262,14 @@ exhibit = {
     },
     "spotlight": {"id": int(spot), "true": TRUE_A, "pred": PRED_A, "explanation": SPOTLIGHT_EXPLANATION},
     "gallery": [pack(i) for i in gallery_ids],
+}
+# the trained network itself (scaler + weights), so the website can show it working and re-run it in the browser
+scaler, mlp = model.named_steps["standardscaler"], model.named_steps["mlpclassifier"]
+exhibit["network"] = {
+    "features": FEATURE_NAMES, "classes": classes, "activation": mlp.activation, "output": mlp.out_activation_,
+    "scaler_mean": np.round(scaler.mean_, 6).tolist(), "scaler_scale": np.round(scaler.scale_, 6).tolist(),
+    "weights": [np.round(W, 5).tolist() for W in mlp.coefs_],
+    "biases": [np.round(b, 5).tolist() for b in mlp.intercepts_],
 }
 OUT_DIR = "../data" if os.path.isdir("../data") else "."
 with open(os.path.join(OUT_DIR, "exhibit.json"), "w") as fh:
